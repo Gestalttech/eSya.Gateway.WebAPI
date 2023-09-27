@@ -1,0 +1,18 @@
+{
+
+  "W0001": "Invalid User Name",
+  "W0002": "Invalid Password",
+  "W0003": "Login ID already Exist",
+  "W0004": "User Id is not activated.please contact system administrator",
+  "W0005": "User Id is blocked.please contact system administrator",
+  "W0006": "Your account has been locked out for ",
+  "W0007": "hours due to",
+  "W0008": "failed login attempts",
+  "W0009": "Your account has been locked due to",
+  "W0010": "Attempts remaining",
+  "W0011": "Invalid OTP",
+  "W0012": "You used this password recently. Please choose a different one",
+  "W0013": "Invalid Current Password",
+  "S0001": "Saved Sucessfully",
+  "S0002": "Updated Sucessfully"
+}
