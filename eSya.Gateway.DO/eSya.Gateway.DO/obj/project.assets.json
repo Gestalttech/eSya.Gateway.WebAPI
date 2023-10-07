@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Projects\\eSyaJsonworking\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\eSya.Gateway.DO.csproj",
+      "projectUniqueName": "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\eSya.Gateway.DO.csproj",
       "projectName": "eSya.Gateway.DO",
-      "projectPath": "D:\\Projects\\eSyaJsonworking\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\eSya.Gateway.DO.csproj",
+      "projectPath": "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\eSya.Gateway.DO.csproj",
       "packagesPath": "C:\\Users\\lenovo\\.nuget\\packages\\",
-      "outputPath": "D:\\Projects\\eSyaJsonworking\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\obj\\",
+      "outputPath": "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
