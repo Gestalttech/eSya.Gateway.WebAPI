@@ -8,7 +8,8 @@ namespace eSya.Gateway.DL.Utility
 {
     public static class CryptGeneration
     {
-        static string secret = "SHRF@GESTALT#5931069B522E695D4F2";
+        //static string secret = "SHRF@GESTALT#5931069B522E695D4F2";
+        static string secret = "eSya@12345Tabibi247";
         public static string Encrypt(string encryptString)
         {
             string EncryptionKey = secret;//"eSya@12345Tabibi247";

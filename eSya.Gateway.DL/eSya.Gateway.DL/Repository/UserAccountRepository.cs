@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using NG.Gateway.DO.StaticVariables;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Http;
+using System.Collections;
 
 namespace eSya.Gateway.DL.Repository
 {
@@ -51,13 +52,43 @@ namespace eSya.Gateway.DL.Repository
                         us.StatusCode = "W0005";
                         return us;
                     }
+                    if (lg.CreatePasswordInNextSignIn)
+                    {
+                        us.IsSucceeded = false;
+                        us.Message = string.Format(_localizer[name: "W0016"]);
+                        us.StatusCode = "W0016";
+                        return us;
+                    }
+                    var validpassword = db.GtEuuspws.Where(x => x.UserId == lg.UserId && x.ActiveStatus).FirstOrDefault();
+                    if (validpassword!=null)
+                    {
+                        string enterpass = CryptGeneration.Decrypt(password);
+                        string existingpass = CryptGeneration.Decrypt(Encoding.UTF8.GetString(validpassword.EPasswd));
+                        if(existingpass != enterpass)
+                        {
+                            us.IsSucceeded = false;
+                            us.Message = string.Format(_localizer[name: "W0002"]);
+                            us.StatusCode = "W0002";
+                            return us;
+
+                        }
+                        
+                    }
+                    else
+                    {
+                        us.IsSucceeded = false;
+                        us.Message = string.Format(_localizer[name: "W0015"]);
+                        us.StatusCode = "W0015";
+                        return us;
+                    }
 
                     //var unLockLoginAfter = await db.GtEupapp.Where(w => w.ParameterId == AppParameter.Password_UnLockLoginAfter && w.ActiveStatus).Select(s => (int)s.ParmValue).DefaultIfEmpty(0).FirstOrDefaultAsync();
                     //var maxUnsuccessfulAttempts = await db.GtEupapp.Where(w => w.ParameterId == AppParameter.Password_MaxUnsuccessfulAttempts && w.ActiveStatus).Select(s => (int)s.ParmValue).DefaultIfEmpty(0).FirstOrDefaultAsync();
 
                     if (maxUnsuccessfulAttempts > 0)
                     {
-                        if (lg.UnsuccessfulLoginAttempts >= maxUnsuccessfulAttempts)
+                        //SNO-6 resolved
+                        if (lg.UnsuccessfulAttempt >= maxUnsuccessfulAttempts)
                         {
                             if (unLockLoginAfter > 0)
                             {
@@ -77,22 +108,25 @@ namespace eSya.Gateway.DL.Repository
                                 us.Message = string.Format(_localizer[name: "W0009"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
                                 return us;
                             }
-                        }
+                        //SNO-6
                     }
-
-                    if (lg.Password == password)
-                    {
-                        lg.UnsuccessfulLoginAttempts = 0;
+                }
+                    //SNO-6
+                    //if (lg.Password == password)
+                    //{
+                      //lg.UnsuccessfulLoginAttempts = 0;
                         lg.LastActivityDate = DateTime.Now;
-                        us.ForcePasswordChangeNextSignIn = lg.ForcePasswordChangeNextSignIn;
-                        us.BlockSignIn = lg.BlockSignIn;
+                    //SNO-6
+                    //us.ForcePasswordChangeNextSignIn = lg.ForcePasswordChangeNextSignIn;
+                    us.BlockSignIn = lg.BlockSignIn;
 
                         us.IsSucceeded = true;
                         us.UserID = lg.UserId;
-                        us.DoctorID = lg.DoctorId;
+                    //SNO-6
+                    //us.DoctorID = lg.DoctorId;
 
-                        if (lg.LastPasswordChangeDate.HasValue)
-                            us.LastPasswordChangedDay = (DateTime.Now.Date - lg.LastPasswordChangeDate.Value.Date).Days;
+                        //if (lg.LastPasswordChangeDate.HasValue)
+                        //    us.LastPasswordChangedDay = (DateTime.Now.Date - lg.LastPasswordChangeDate.Value.Date).Days;
 
                         var ub = db.GtEuusbls
                             .Join(db.GtEcbslns,
@@ -105,39 +139,54 @@ namespace eSya.Gateway.DL.Repository
                            .ToDictionary(x => x.Key, x => x.Value);
 
                         if (ub.Count() > 0)
-                            us.UserType = ub.FirstOrDefault().u.UserType ?? 0;
+                        //SNO-6
+                        //us.UserType = ub.FirstOrDefault().u.UserType ?? 0;
 
                         if (ub.Where(w => w.u.AllowMtfy).Count() > 0)
-                        {
+                        {  //SNO-6
+                           //us.l_FinancialYear = db.GtEcclcos
+                           //    .Where(w => w.FromDate.Date <= System.DateTime.Now.Date)
+
+                            //.Select(x => (int)x.FinancialYear).Distinct().OrderByDescending(o => o).ToList();
+
                             us.l_FinancialYear = db.GtEcclcos
-                                .Where(w => w.FromDate.Date <= System.DateTime.Now.Date)
-                                .Select(x => (int)x.FinancialYear).Distinct().OrderByDescending(o => o).ToList();
+                               .Where(w => w.FromDate.Date <= System.DateTime.Now.Date)
+
+                            .Select(x => (int)x.Year).Distinct().OrderByDescending(o => o).ToList();
                         }
                         else
-                        {
+                        {  //SNO-6
+                           //us.l_FinancialYear = db.GtEcclcos
+                           //     .Where(w => w.FromDate.Date >= System.DateTime.Now.Date
+                           //        && w.TillDate.Date <= System.DateTime.Now.Date)
+                           //     .Select(x => (int)x.FinancialYear).Distinct().OrderByDescending(o => o).ToList();
                             us.l_FinancialYear = db.GtEcclcos
                                  .Where(w => w.FromDate.Date >= System.DateTime.Now.Date
                                     && w.TillDate.Date <= System.DateTime.Now.Date)
-                                 .Select(x => (int)x.FinancialYear).Distinct().OrderByDescending(o => o).ToList();
+                                 .Select(x => (int)x.Year).Distinct().OrderByDescending(o => o).ToList();
                         }
-                    }
+                    //SNO-6
+                    //}
                     else
-                    {
+                        {
                         us.IsSucceeded = false;
                         us.Message = string.Format(_localizer[name: "W0002"]);
-                       
-                        if (lg.LoginAttemptDate.HasValue && lg.LoginAttemptDate.Value.Date == DateTime.Now.Date)
-                            lg.UnsuccessfulLoginAttempts += 1;// lg.UnsuccessfulLoginAttempts;
-                        else
-                            lg.UnsuccessfulLoginAttempts = 1;
-                        lg.LoginAttemptDate = DateTime.Now;
+                        //SNO-6
+                        //if (lg.LoginAttemptDate.HasValue && lg.LoginAttemptDate.Value.Date == DateTime.Now.Date)
 
-                        if ((maxUnsuccessfulAttempts - lg.UnsuccessfulLoginAttempts) > 0)
-                            us.Message += string.Format(_localizer[name: "W0010"])+":" + (maxUnsuccessfulAttempts - lg.UnsuccessfulLoginAttempts).ToString();
-                          
-                        else if(maxUnsuccessfulAttempts > 0)
-                            us.Message += string.Format(_localizer[name: "W0009"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
-                        us.StatusCode = "W0009";
+                        //lg.UnsuccessfulLoginAttempts += 1;
+
+                        //else
+                      
+                        //lg.UnsuccessfulLoginAttempts = 1;
+                        //lg.LoginAttemptDate = DateTime.Now;
+                        //SNO-6
+                        //if ((maxUnsuccessfulAttempts - lg.UnsuccessfulLoginAttempts) > 0)
+                        //    us.Message += string.Format(_localizer[name: "W0010"])+":" + (maxUnsuccessfulAttempts - lg.UnsuccessfulLoginAttempts).ToString();
+
+                        //else if (maxUnsuccessfulAttempts > 0)
+                        //    us.Message += string.Format(_localizer[name: "W0009"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
+                        //us.StatusCode = "W0009";
                     }
 
                     await db.SaveChangesAsync();
@@ -160,32 +209,33 @@ namespace eSya.Gateway.DL.Repository
             using (var db = new eSyaEnterprise())
             {
                 DO_UserAccount us = new DO_UserAccount();
-
+                //SNO-8
                 var lg = await db.GtEuusms
-                    .Where(w => w.MobileNumber == mobileNumber
-                                && w.ActiveStatus == true)
+                    .Where(w => 
+                    //w.MobileNumber == mobileNumber &&
+                                w.ActiveStatus == true)
                     .FirstOrDefaultAsync();
 
                 if (lg != null)
-                {
-                    if (lg.AllowMobileLogin != null && (bool)lg.AllowMobileLogin)
-                    {
-                        Random rnd = new Random();
-                        var OTP = rnd.Next(100000, 999999).ToString();
+                { //SNO-8
+                    //if (lg.AllowMobileLogin != null && (bool)lg.AllowMobileLogin)
+                    //{
+                    //    Random rnd = new Random();
+                    //    var OTP = rnd.Next(100000, 999999).ToString();
 
-                        us.IsSucceeded = true;
-                        us.UserID = lg.UserId;
-                        us.OTP = OTP;
+                    //    us.IsSucceeded = true;
+                    //    us.UserID = lg.UserId;
+                    //    us.OTP = OTP;
 
-                        lg.Otpnumber = OTP;
-                        lg.OtpgeneratedDate = System.DateTime.Now;
-                        db.SaveChanges();
-                    }
-                    else
-                    {
-                        us.IsSucceeded = false;
-                        us.StatusCode = "100";
-                    }
+                    //    lg.Otpnumber = OTP;
+                    //    lg.OtpgeneratedDate = System.DateTime.Now;
+                    //    db.SaveChanges();
+                    //}
+                    //else
+                    //{
+                    //    us.IsSucceeded = false;
+                    //    us.StatusCode = "100";
+                    //}
                 }
                 else
                 {
@@ -202,10 +252,12 @@ namespace eSya.Gateway.DL.Repository
             using (var db = new eSyaEnterprise())
             {
                 DO_UserAccount us = new DO_UserAccount();
-
+                //SNO-9
                 var lg = await db.GtEuusms
-                    .Where(w => w.MobileNumber == mobileNumber
-                                && w.ActiveStatus == true)
+                    .Where(w => 
+                    //w.MobileNumber == mobileNumber &&
+
+                                 w.ActiveStatus == true)
                     .FirstOrDefaultAsync();
 
                 if (lg != null)
@@ -216,9 +268,9 @@ namespace eSya.Gateway.DL.Repository
                     us.IsSucceeded = true;
                     us.UserID = lg.UserId;
                     us.OTP = OTP;
-
-                    lg.Otpnumber = OTP;
-                    lg.OtpgeneratedDate = System.DateTime.Now;
+                    //SNO-9
+                    //lg.Otpnumber = OTP;
+                    //lg.OtpgeneratedDate = System.DateTime.Now;
                     db.SaveChanges();
                 }
                 else
@@ -236,54 +288,55 @@ namespace eSya.Gateway.DL.Repository
             using (var db = new eSyaEnterprise())
             {
                 DO_UserAccount us = new DO_UserAccount();
-
+                //SNO-10
                 var lg = await db.GtEuusms
-                    .Where(w => w.MobileNumber == mobileNumber
-                                && w.ActiveStatus == true)
+                    .Where(w =>
+                    //w.MobileNumber == mobileNumber &&
+                                 w.ActiveStatus == true)
                     .FirstOrDefaultAsync();
 
                 if (lg != null)
-                {
-                    if (lg.Otpnumber == otp)
-                    {
-                        lg.UnsuccessfulLoginAttempts = 0;
-                        lg.LastActivityDate = DateTime.Now;
-                        await db.SaveChangesAsync();
+                {//SNO-10
+                    //if (lg.Otpnumber == otp)
+                    //{
+                    //    lg.UnsuccessfulLoginAttempts = 0;
+                    //    lg.LastActivityDate = DateTime.Now;
+                    //    await db.SaveChangesAsync();
 
-                        us.IsSucceeded = true;
-                        us.UserID = lg.UserId;
-                        us.LoginID = lg.LoginId;
+                    //    us.IsSucceeded = true;
+                    //    us.UserID = lg.UserId;
+                    //    us.LoginID = lg.LoginId;
 
-                        var ub = db.GtEuusbls
-                            .Join(db.GtEcbslns,
-                                u => u.BusinessKey,
-                                b => b.BusinessKey,
-                                (u, b) => new { u, b })
-                            .Where(w => w.u.UserId == lg.UserId);
+                    //    var ub = db.GtEuusbls
+                    //        .Join(db.GtEcbslns,
+                    //            u => u.BusinessKey,
+                    //            b => b.BusinessKey,
+                    //            (u, b) => new { u, b })
+                    //        .Where(w => w.u.UserId == lg.UserId);
 
-                        us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.LocationDescription))
-                           .ToDictionary(x => x.Key, x => x.Value);
+                    //    us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.LocationDescription))
+                    //       .ToDictionary(x => x.Key, x => x.Value);
 
-                        if (ub.Where(w => w.u.AllowMtfy).Count() > 0)
-                        {
-                            us.l_FinancialYear = db.GtEcclcos
-                                .Where(w => w.FromDate.Date <= System.DateTime.Now.Date)
-                                .Select(x => (int)x.FinancialYear).OrderByDescending(o => o).ToList();
-                        }
-                        else
-                        {
-                            us.l_FinancialYear = db.GtEcclcos
-                                 .Where(w => w.FromDate.Date >= System.DateTime.Now.Date
-                                    && w.TillDate.Date <= System.DateTime.Now.Date)
-                                 .Select(x => (int)x.FinancialYear).OrderByDescending(o => o).ToList();
-                        }
-                    }
-                    else
-                    {
-                        us.IsSucceeded = false;
-                        us.Message = string.Format(_localizer[name: "W0011"]);
-                        us.StatusCode = "W0011";
-                    }
+                    //    if (ub.Where(w => w.u.AllowMtfy).Count() > 0)
+                    //    {
+                    //        us.l_FinancialYear = db.GtEcclcos
+                    //            .Where(w => w.FromDate.Date <= System.DateTime.Now.Date)
+                    //            .Select(x => (int)x.FinancialYear).OrderByDescending(o => o).ToList();
+                    //    }
+                    //    else
+                    //    {
+                    //        us.l_FinancialYear = db.GtEcclcos
+                    //             .Where(w => w.FromDate.Date >= System.DateTime.Now.Date
+                    //                && w.TillDate.Date <= System.DateTime.Now.Date)
+                    //             .Select(x => (int)x.FinancialYear).OrderByDescending(o => o).ToList();
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    us.IsSucceeded = false;
+                    //    us.Message = string.Format(_localizer[name: "W0011"]);
+                    //    us.StatusCode = "W0011";
+                    //}
                 }
                 else
                 {
@@ -317,26 +370,29 @@ namespace eSya.Gateway.DL.Repository
                     {
                         int takeLastChangePassword = passwordRepeatationPolicy;
                         var l_ph = await db.GtEuusphs.Where(w => w.UserId == userID && w.ActiveStatus)
-                            .OrderByDescending(o => o.LastPasswordChanged)
+                            //SNO-4
+                            //.OrderByDescending(o => o.LastPasswordChanged)
                             .Take(takeLastChangePassword)
                             .ToListAsync();
-                        var previousPasswordExists = l_ph.Where(w => w.LastPassword == password).Count();
-                        if (previousPasswordExists > 0)
-                        {
-                            return new DO_ReturnParameter() { Status = false,StatusCode= "W0012", Message = string.Format(_localizer[name: "W0012"]) };
-                        }
+                        //SNO-4
+                        //var previousPasswordExists = l_ph.Where(w => w.LastPassword == password).Count();
+                        //if (previousPasswordExists > 0)
+                        //{
+                        //    return new DO_ReturnParameter() { Status = false,StatusCode= "W0012", Message = string.Format(_localizer[name: "W0012"]) };
+                        //}
                     }
                     //}
-
-                    lg.LastPasswordChangeDate = DateTime.Now;
-                    lg.Password = password;
-                    lg.ForcePasswordChangeNextSignIn = false;
+                    //SNO-4
+                    //lg.LastPasswordChangeDate = DateTime.Now;
+                    //lg.Password = password;
+                    //lg.ForcePasswordChangeNextSignIn = false;
 
                     GtEuusph ph = new GtEuusph
                     {
                         UserId = userID,
-                        LastPassword = password,
-                        LastPasswordChanged = DateTime.Now,
+                        //SNO-4
+                        //LastPassword = password,
+                        //LastPasswordChanged = DateTime.Now,
                         ActiveStatus = true,
                         FormId = "0",
                         CreatedBy = userID,
@@ -363,7 +419,8 @@ namespace eSya.Gateway.DL.Repository
 
                 var lg = await db.GtEuusms
                     .Where(w => w.UserId == userID
-                                && w.Password == oldpassword
+                    //SNO-5
+                                //&& w.Password == oldpassword
                                 && w.ActiveStatus == true)
                     .FirstOrDefaultAsync();
 
@@ -377,26 +434,29 @@ namespace eSya.Gateway.DL.Repository
                     {
                         int takeLastChangePassword = passwordRepeatationPolicy;
                         var l_ph = await db.GtEuusphs.Where(w => w.UserId == userID && w.ActiveStatus)
-                                .OrderByDescending(o => o.LastPasswordChanged)
+                            //SNO-5
+                                //.OrderByDescending(o => o.LastPasswordChanged)
                                 .Take(takeLastChangePassword)
                                 .ToListAsync();
-                        var previousPasswordExists = l_ph.Where(w => w.LastPassword == newPassword).Count();
-                        if (previousPasswordExists > 0)
-                        {
-                            return new DO_ReturnParameter() { Status = false,StatusCode="W0012", Message = string.Format(_localizer[name: "W0012"]) };
-                        }
+                        //SNO-5
+                        //var previousPasswordExists = l_ph.Where(w => w.LastPassword == newPassword).Count();
+                        //if (previousPasswordExists > 0)
+                        //{
+                        //    return new DO_ReturnParameter() { Status = false,StatusCode="W0012", Message = string.Format(_localizer[name: "W0012"]) };
+                        //}
                     }
                     //}
-
-                    lg.Password = newPassword;
-                    lg.LastPasswordChangeDate = DateTime.Now;
-                    lg.ForcePasswordChangeNextSignIn = false;
+                    //SNO-5
+                    //lg.Password = newPassword;
+                    //lg.LastPasswordChangeDate = DateTime.Now;
+                    //lg.ForcePasswordChangeNextSignIn = false;
 
                     GtEuusph ph = new GtEuusph
                     {
                         UserId = userID,
-                        LastPassword = newPassword,
-                        LastPasswordChanged = DateTime.Now,
+                        //SNO-5
+                        //LastPassword = newPassword,
+                        //LastPasswordChanged = DateTime.Now,
                         ActiveStatus = true,
                         FormId = "0",
                         CreatedBy = userID,
@@ -423,15 +483,16 @@ namespace eSya.Gateway.DL.Repository
                 var lg = await db.GtEuusms
                     .Where(w => w.UserId == userID)
                     .FirstOrDefaultAsync();
-
-                if (lg != null)
-                {
-                    return CryptGeneration.Decrypt(lg.Password);
-                }
-                else
-                {
-                    return null;
-                }
+                //SNO-7
+                //if (lg != null)
+                //{
+                //    return CryptGeneration.Decrypt(lg.Password);
+                //}
+                //else
+                //{
+                //    return null;
+                //}
+               return "Abdul Rahiman";
             }
         }
 
@@ -643,7 +704,7 @@ namespace eSya.Gateway.DL.Repository
             using (eSyaEnterprise db = new eSyaEnterprise())
             {
                 var sm = db.GtEcsbmns.Where(w => w.MainMenuId == mainMenuID
-                    && w.ParentId == menuItemID && w.ActiveStatus == true);
+                    && w.ParentId == menuItemID && w.ActiveStatus == true).ToList();
                 foreach (var s in sm)
                 {
                     userMenu.Add(new DO_SubMenu { MenuItemId = s.MenuItemId });
@@ -743,13 +804,175 @@ namespace eSya.Gateway.DL.Repository
         }
 
         //NEW
+        //public async Task<List<DO_MainMenu>> GetUserMenulist(int businessKey, int userID)
+        //{
+        //    try
+        //    {
+        //        using (eSyaEnterprise db = new eSyaEnterprise())
+        //        {
+        //            var us = db.GtEuubgrs.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.ActiveStatus).FirstOrDefault();
+
+        //            if (us != null)
+        //            {
+        //                var userForms = db.GtEcmnfls
+        //                                .Join(db.GtEuusgrs,
+        //                                    f => f.MenuKey,
+        //                                    u => u.MenuKey,
+        //                                    (f, u) => new { f, u })
+        //                                .Where(w => w.u.UserGroup == us.UserGroup
+        //                                    //&& w.u.UserType == us.UserType
+        //                                    && w.u.UserRole == us.UserRole
+        //                                    && w.u.ActiveStatus && w.f.ActiveStatus)
+        //                                .Select(r => new DO_FormMenu
+        //                                {
+        //                                    MainMenuId = r.f.MainMenuId,
+        //                                    MenuItemId = r.f.MenuItemId,
+        //                                    FormId = r.f.FormId
+        //                                }).ToList();
+
+
+
+        //                List<DO_SubMenu> userMenu = new List<DO_SubMenu>();
+        //                foreach (var um in userForms)
+        //                {
+        //                    userMenu.Add(new DO_SubMenu { MenuItemId = um.MenuItemId });
+        //                    GetSubMenuItem(um.MainMenuId, um.MenuItemId, userMenu);
+        //                }
+
+        //                List<DO_MainMenu> l_MenuList = new List<DO_MainMenu>();
+
+
+        //                //var mainMenus = db.GtEcmamns.Where(w => userForms.Any(m => m.MainMenuId == w.MainMenuId)
+        //                //    && w.ActiveStatus == true).OrderBy(o => o.MenuIndex);
+
+        //                // Step 1: Extract MainMenuId values from userForms into a list
+        //                var mainMenuIds = userForms.Select(m => m.MainMenuId).ToList();
+
+        //                // Step 2: Use the list of MainMenuId values in the query against GtEcmamns
+        //                var mainMenus = db.GtEcmamns
+        //                    .Where(w => mainMenuIds.Contains(w.MainMenuId) && w.ActiveStatus == true)
+        //                    .OrderBy(o => o.MenuIndex)
+        //                    .ToList();
+
+
+        //                foreach (var m in mainMenus)
+        //                {
+        //                    DO_MainMenu do_MainMenu = new DO_MainMenu();
+        //                    do_MainMenu.MainMenuId = m.MainMenuId;
+        //                    do_MainMenu.MainMenu = m.MainMenu;
+        //                    do_MainMenu.MenuIndex = m.MenuIndex;
+        //                    do_MainMenu.l_FormMenu = GetUserSubMenuFormsItem(m.MainMenuId, 0, userMenu, userForms);
+        //                    l_MenuList.Add(do_MainMenu);
+        //                }
+        //                return l_MenuList;
+        //            }
+        //        }
+        //        return new List<DO_MainMenu>();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
+        //}
+        //public  List<DO_FormMenu> GetUserSubMenuFormsItem(int mainMenuID, int menuItemID, List<DO_SubMenu> userMenu, List<DO_FormMenu> userForms)
+        //{
+        //    using (eSyaEnterprise db = new eSyaEnterprise())
+        //    {
+        //        List<DO_FormMenu> l_menuForm = new List<DO_FormMenu>();
+
+        //        // Step 1: Extract MenuItemId values from userMenu into a list
+        //        var userMenuItemIds = userMenu.Select(m => m.MenuItemId).ToList();
+
+        //        // Step 2: Use the list of MenuItemId values in the query against GtEcsbmns
+        //        var sm = db.GtEcsbmns
+        //            .Where(w => userMenuItemIds.Contains(w.MenuItemId) && w.ActiveStatus == true)
+        //                    .Select(f => new DO_FormMenu()
+        //                    {
+        //                        MenuItemId = f.MenuItemId,
+        //                        MenuItemName = f.MenuItemName,
+        //                        FormIndex = f.MenuIndex,
+        //                        ParentId = menuItemID,
+        //                    }).OrderBy(o => o.FormIndex).ToList();
+
+        //        // Step 1: Extract FormId values from userForms into a list
+        //        var userFormIds = userForms.Select(f => f.FormId).ToList();
+
+        //        // Step 2: Use the list of MenuItemId values in the query against GtEcsbmns
+
+        //        var fm = db.GtEcmnfls
+        //           .Join(db.GtEcfmnms,
+        //               f => f.FormId,
+        //               i => i.FormId,
+        //               (f, i) => new { f, i })
+        //           .Where(w => w.f.MainMenuId == mainMenuID && w.f.MenuItemId == menuItemID
+        //                       && w.f.ActiveStatus && w.i.ActiveStatus
+        //                       && userFormIds.Contains(w.f.FormId)
+        //                       && w.f.FormId > 0 && w.f.ActiveStatus == true)
+        //           .OrderBy(o => o.f.FormIndex)
+        //           .AsQueryable()
+        //           .Select(f => new DO_FormMenu()
+        //           {
+        //               // MenuItemId = f.f.MenuItemId,
+        //               FormId = f.f.FormId,
+        //               FormInternalID = f.i.FormIntId,
+        //               FormNameClient = f.f.FormNameClient,
+        //               NavigateUrl = f.i.NavigateUrl,
+        //               Area = f.i.NavigateUrl.Split('/', StringSplitOptions.None)[0],
+        //               Controller = f.i.NavigateUrl.Split('/', StringSplitOptions.None)[1],
+        //               View = f.i.NavigateUrl.Split('/', StringSplitOptions.None)[2],
+        //               FormIndex = f.f.FormIndex,
+        //               MenuKey = f.f.MenuKey,
+        //               ParentId = menuItemID,
+        //           }).OrderBy(o => o.FormIndex).ToList();
+
+        //        //var fm = db.GtEcmnfls
+        //        //    .Join(db.GtEcfmnms,
+        //        //        f => f.FormId,
+        //        //        i => i.FormId,
+        //        //        (f, i) => new { f, i })
+        //        //    .Where(w => w.f.MainMenuId == mainMenuID && w.f.MenuItemId == menuItemID
+        //        //                && w.f.ActiveStatus && w.i.ActiveStatus
+        //        //                && userForms.Any(f => f.FormId == w.f.FormId)
+        //        //                && w.f.FormId > 0 && w.f.ActiveStatus == true)
+        //        //    .OrderBy(o => o.f.FormIndex)
+        //        //    .AsQueryable()
+        //        //    .Select(f => new DO_FormMenu()
+        //        //    {
+        //        //        // MenuItemId = f.f.MenuItemId,
+        //        //        FormId = f.f.FormId,
+        //        //        FormInternalID = f.i.FormIntId,
+        //        //        FormNameClient = f.f.FormNameClient,
+        //        //        NavigateUrl = f.i.NavigateUrl,
+        //        //        Area = f.i.NavigateUrl.Split('/', StringSplitOptions.None)[0],
+        //        //        Controller = f.i.NavigateUrl.Split('/', StringSplitOptions.None)[1],
+        //        //        View = f.i.NavigateUrl.Split('/', StringSplitOptions.None)[2],
+        //        //        FormIndex = f.f.FormIndex,
+        //        //        MenuKey = f.f.MenuKey,
+        //        //        ParentId = menuItemID,
+        //        //    }).OrderBy(o => o.FormIndex).ToList();
+
+        //        var mf = sm.Union(fm);
+
+        //        foreach (var s in sm)
+        //        {
+        //            var l_s = GetUserSubMenuFormsItem(mainMenuID, s.MenuItemId, userMenu, userForms);
+        //            s.l_FormMenu = l_s;
+        //        }
+
+        //        l_menuForm.AddRange(mf.OrderBy(o => o.FormIndex));
+
+        //        return  l_menuForm;
+        //    }
+        //}
+
+        //NEW
         public async Task<List<DO_MainMenu>> GetUserMenulist(int businessKey, int userID)
         {
             try
             {
                 using (eSyaEnterprise db = new eSyaEnterprise())
                 {
-                    var us = db.GtEuusrls.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.ActiveStatus).FirstOrDefault();
+                    var us = db.GtEuubgrs.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.ActiveStatus).FirstOrDefault();
 
                     if (us != null)
                     {
@@ -759,7 +982,7 @@ namespace eSya.Gateway.DL.Repository
                                             u => u.MenuKey,
                                             (f, u) => new { f, u })
                                         .Where(w => w.u.UserGroup == us.UserGroup
-                                            && w.u.UserType == us.UserType
+                                            //&& w.u.UserType == us.UserType
                                             && w.u.UserRole == us.UserRole
                                             && w.u.ActiveStatus && w.f.ActiveStatus)
                                         .Select(r => new DO_FormMenu
@@ -777,8 +1000,13 @@ namespace eSya.Gateway.DL.Repository
                         }
 
                         List<DO_MainMenu> l_MenuList = new List<DO_MainMenu>();
-                        var mainMenus = db.GtEcmamns.Where(w => userForms.Any(m => m.MainMenuId == w.MainMenuId)
-                            && w.ActiveStatus == true).OrderBy(o => o.MenuIndex);
+
+                        var main_m = db.GtEcmamns.Where(x => x.ActiveStatus).OrderBy(o => o.MenuIndex).ToList();
+
+                        var mainMenus = main_m.Where(w => userForms.Any(m => m.MainMenuId == w.MainMenuId)).OrderBy(o => o.MenuIndex).ToList();
+                        //var mainMenus = db.GtEcmamns.Where(w => userForms.Any(m => m.MainMenuId == w.MainMenuId)
+                        //    && w.ActiveStatus == true).OrderBy(o => o.MenuIndex);
+
                         foreach (var m in mainMenus)
                         {
                             DO_MainMenu do_MainMenu = new DO_MainMenu();
@@ -805,11 +1033,12 @@ namespace eSya.Gateway.DL.Repository
             {
                 List<DO_FormMenu> l_menuForm = new List<DO_FormMenu>();
 
-                var sm = db.GtEcsbmns
-                        .Where(w => w.MainMenuId == mainMenuID
-                            && w.ParentId == menuItemID
-                            && userMenu.Any(f => f.MenuItemId == w.MenuItemId)
-                            && w.ActiveStatus == true).OrderBy(o => o.MenuIndex)
+
+                var sm_m = db.GtEcsbmns.Where(w => w.MainMenuId == mainMenuID
+                          && w.ParentId == menuItemID && w.ActiveStatus).OrderBy(o => o.MenuIndex).ToList();
+
+                var sm = sm_m
+                        .Where(w => userMenu.Any(f => f.MenuItemId == w.MenuItemId))
                         .Select(f => new DO_FormMenu()
                         {
                             MenuItemId = f.MenuItemId,
@@ -818,17 +1047,21 @@ namespace eSya.Gateway.DL.Repository
                             ParentId = menuItemID,
                         }).OrderBy(o => o.FormIndex).ToList();
 
-                var fm = db.GtEcmnfls
+
+                var fm_m = db.GtEcmnfls
                     .Join(db.GtEcfmnms,
                         f => f.FormId,
                         i => i.FormId,
                         (f, i) => new { f, i })
-                    .Where(w => w.f.MainMenuId == mainMenuID && w.f.MenuItemId == menuItemID
+                     .Where(w => w.f.MainMenuId == mainMenuID && w.f.MenuItemId == menuItemID
                                 && w.f.ActiveStatus && w.i.ActiveStatus
-                                && userForms.Any(f => f.FormId == w.f.FormId)
                                 && w.f.FormId > 0 && w.f.ActiveStatus == true)
                     .OrderBy(o => o.f.FormIndex)
-                    .AsQueryable()
+                    .ToList();
+
+                var fm= fm_m.Where(w=>userForms.Any(f => f.FormId == w.f.FormId))
+                    .OrderBy(o => o.f.FormIndex)
+                    .ToList()
                     .Select(f => new DO_FormMenu()
                     {
                         // MenuItemId = f.f.MenuItemId,
@@ -857,8 +1090,6 @@ namespace eSya.Gateway.DL.Repository
                 return l_menuForm;
             }
         }
-
-
         public async Task<DO_UserFormRole> GetFormActionByUser(int businessKey, int userID, string navigationURL)
         {
             try
@@ -866,74 +1097,118 @@ namespace eSya.Gateway.DL.Repository
                 using (var db = new eSyaEnterprise())
                 {
 
-                    //var uf = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.ActiveStatus)
-                    //    .Select(r => new DO_MenuAction
-                    //    {
-                    //        MenuKey = r.MenuKey,
-                    //        ActionId = r.ActionId
-                    //    }).ToList();
+                    //SNO-3 resolved
+                    //var us = db.GtEuusrls.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.ActiveStatus).FirstOrDefault();
+                    var us = db.GtEuubgrs.Where(x => x.BusinessKey == businessKey && x.UserId == userID && x.ActiveStatus).FirstOrDefault();
+                    if (us != null)
+                    {
 
-                    //if (uf.Count() == 0)
-                    //{
-                    var us = db.GtEuusrls.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.ActiveStatus).FirstOrDefault();
-                     var uf = db.GtEuusacs.Where(w => w.UserGroup == us.UserGroup
-                                    && w.UserType == us.UserType
-                                    && w.UserRole == us.UserRole
-                                    && w.ActiveStatus)
-                        .Select(r => new DO_MenuAction
+                    
+                    var uf = db.GtEuusgrs.Where(w =>
+                    w.UserGroup == us.UserGroup &&
+                    //&& w.UserType == us.UserType &&
+                    w.UserRole == us.UserRole && w.ActiveStatus).
+                   Join(db.GtEuusrls.Where(x => x.ActiveStatus),
+                   h => h.UserRole,
+                   y => y.UserRole,
+                   (h, y) => new { h, y })
+                  .Select(r => new DO_MenuAction
+                  {
+                      MenuKey = r.h.MenuKey,
+                      ActionId = r.y.ActionId
+                  }).ToList();
+                    var distinctMenuKey = uf
+                    .GroupBy(p => new { p.MenuKey, p.ActionId })
+                    .Select(g => g.First())
+                    .ToList();
+
+                    var userForms =  db.GtEcfmfds
+                       .Join(db.GtEcfmnms,
+                           f => f.FormId,
+                           d => d.FormId,
+                           (f, d) => new { f, d })
+                       .Join(db.GtEcmnfls,
+                           fd => fd.f.FormId,
+                           m => m.FormId,
+                           (fd, m) => new { fd, m })
+                       .Where(w => w.fd.d.NavigateUrl == navigationURL)
+                       .Select(x => new
+                       {
+                           x.fd.f.FormId,
+                           x.fd.d.FormIntId,
+                           x.m.FormNameClient,
+                           x.m.MenuKey
+                       }).ToList();
+                    var userFormRoles = userForms.Select(x => new DO_UserFormRole
+                    {
+                        FormID = x.FormId,
+                        FormIntID=x.FormIntId,
+                        FormName = x.FormNameClient,
+                        IsInsert = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 1),
+                        IsEdit = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 2),
+                        IsView = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 3),
+                        IsDelete = uf.Any(w => w.MenuKey == x.MenuKey && (w.ActionId == 4 || w.ActionId == 7)),
+                        IsAuthenticate = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 8)
+                    }).FirstOrDefault();
+
+
+                        //var lr = await db.GtEcfmfds
+                        //    .Join(db.GtEcfmnms,
+                        //        f => f.FormId,
+                        //        d => d.FormId,
+                        //        (f, d) => new { f, d })
+                        //    .Join(db.GtEcmnfls,
+                        //        fd => fd.f.FormId,
+                        //        m => m.FormId,
+                        //        (fd, m) => new { fd, m })
+                        //    .Where(w => w.fd.d.NavigateUrl == navigationURL)
+                        //    .Select(x => new DO_UserFormRole
+                        //    {
+                        //        FormID = x.fd.f.FormId,
+                        //        FormIntID = x.fd.d.FormIntId,
+                        //        FormName = x.m.FormNameClient,
+                        //        IsInsert = uf.ToList().Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 1).Count() > 0,
+                        //        //IsInsert = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 1).Count() > 0,
+                        //        //IsEdit = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 2).Count() > 0,
+                        //        //IsView = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 3).Count() > 0,
+                        //        //IsDelete = uf.Where(w => w.MenuKey == x.m.MenuKey && (w.ActionId == 4 || w.ActionId == 7)).Count() > 0,
+                        //        //IsAuthenticate = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 8).Count() > 0,
+                        //        //IsPrint = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 5).Count() > 0,
+                        //        //IsRePrint = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 6).Count() > 0,
+                        //        //IsView = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 1 && w.ActiveStatus).Count() > 0,
+                        //        //IsInsert = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 2 && w.ActiveStatus).Count() > 0,
+                        //        //IsEdit = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 3 && w.ActiveStatus).Count() > 0,
+                        //        //IsDelete = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 4 && w.ActiveStatus).Count() > 0,
+                        //        //IsPrint = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 5 && w.ActiveStatus).Count() > 0,
+                        //        //IsRePrint = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 6 && w.ActiveStatus).Count() > 0,
+                        //        //IsApprove = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 7 && w.ActiveStatus).Count() > 0,
+                        //        //IsAuthenticate = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 8 && w.ActiveStatus).Count() > 0,
+                        //        //IsGiveConcession = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 9 && w.ActiveStatus).Count() > 0,
+                        //        //IsGiveDiscount = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 10 && w.ActiveStatus).Count() > 0,
+                        //    }).FirstOrDefaultAsync();
+                        return userFormRoles;
+                    }
+                    else
+                    {
+                        var userFormRoles = new DO_UserFormRole
                         {
-                            MenuKey = r.MenuKey,
-                            ActionId = r.ActionId
-                        }).ToList();
-
-                  //  }
-
-                    var lr = db.GtEcfmfds
-                        .Join(db.GtEcfmnms,
-                            f => f.FormId,
-                            d => d.FormId,
-                            (f, d) => new { f, d })
-                        .Join(db.GtEcmnfls,
-                            fd => fd.f.FormId,
-                            m => m.FormId,
-                            (fd, m) => new { fd, m })
-                        //.GroupJoin(db.GtEuusfa.Where(w => w.BusinessKey == businessID && w.ActiveStatus),
-                        //   fdm => fdm.m.MenuKey,
-                        //   a => a.MenuKey,
-                        //   (fdm, a) => new { fdm, a = a.FirstOrDefault() })
-                        .Where(w => w.fd.d.NavigateUrl == navigationURL)
-                        .Select(x => new DO_UserFormRole
-                        {
-                            FormID = x.fd.f.FormId,
-                            FormIntID = x.fd.d.FormIntId,
-                            FormName = x.m.FormNameClient,
-                            IsInsert = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 1).Count() > 0,
-                            IsEdit = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 2).Count() > 0,
-                            IsView = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 3).Count() > 0,
-                            IsDelete = uf.Where(w => w.MenuKey == x.m.MenuKey && (w.ActionId == 4 || w.ActionId == 7)).Count() > 0,
-                            IsAuthenticate = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 8).Count() > 0,
-                            IsPrint = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 5).Count() > 0,
-                            IsRePrint = uf.Where(w => w.MenuKey == x.m.MenuKey && w.ActionId == 6).Count() > 0,
-                            //IsView = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 1 && w.ActiveStatus).Count() > 0,
-                            //IsInsert = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 2 && w.ActiveStatus).Count() > 0,
-                            //IsEdit = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 3 && w.ActiveStatus).Count() > 0,
-                            //IsDelete = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 4 && w.ActiveStatus).Count() > 0,
-                            //IsPrint = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 5 && w.ActiveStatus).Count() > 0,
-                            //IsRePrint = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 6 && w.ActiveStatus).Count() > 0,
-                            //IsApprove = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 7 && w.ActiveStatus).Count() > 0,
-                            //IsAuthenticate = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 8 && w.ActiveStatus).Count() > 0,
-                            //IsGiveConcession = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 9 && w.ActiveStatus).Count() > 0,
-                            //IsGiveDiscount = db.GtEuusfa.Where(w => w.BusinessKey == businessKey && w.UserId == userID && w.MenuKey == x.m.MenuKey && w.ActionId == 10 && w.ActiveStatus).Count() > 0,
-                        }).FirstOrDefaultAsync();
-
-                    return await lr;
+                            FormID = 0,
+                            FormIntID = null,
+                            FormName = null,
+                            IsInsert = false,
+                            IsEdit = false,
+                            IsView = false,
+                            IsDelete = false,
+                            IsAuthenticate = false
+                        };
+                        return userFormRoles;
+                    }
                 }
-
             }
             catch (Exception ex)
             {
                 throw ex;
-            }
+            } 
         }
 
 
@@ -967,7 +1242,7 @@ namespace eSya.Gateway.DL.Repository
             {
                 Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] {
             0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76
-        });
+            });
                 encryptor.Key = pdb.GetBytes(32);
                 encryptor.IV = pdb.GetBytes(16);
                 using (MemoryStream ms = new MemoryStream())
@@ -1091,5 +1366,194 @@ namespace eSya.Gateway.DL.Repository
             }
         }
 
+        #region OTP Process
+        //has to implement once sir give table structure
+        //public async Task<DO_UserAccount> ValidateUserMobile(int UserID,string mobileNumber)
+        //{
+        //    using (var db = new eSyaEnterprise())
+        //    {
+        //        DO_UserAccount us = new DO_UserAccount();
+
+        //        var lg = await db.GtEuusbls
+        //            .Where(w => w.MobileNumber == mobileNumber && w.UserId== UserID
+        //                        && w.ActiveStatus == true)
+        //            .FirstOrDefaultAsync();
+
+        //        if (lg != null)
+        //        {
+        //            //[dbo].[GT_EUUOTP]
+        //            Random rnd = new Random();
+        //            var OTP = rnd.Next(100000, 999999).ToString();
+
+        //            us.IsSucceeded = true;
+        //            us.UserID = lg.UserId;
+        //            us.OTP = OTP;
+
+        //            lg.Otpnumber = OTP;
+        //            lg.OtpgeneratedDate = System.DateTime.Now;
+        //            db.SaveChanges();
+        //        }
+        //        else
+        //        {
+        //            us.IsSucceeded = false;
+        //            us.StatusCode = "404";
+        //        }
+
+        //        return us;
+        //    }
+        //}
+
+        public async Task<DO_UserAccount> ValidateCreateUserOTP(int userId, string otp)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+
+                var lg = await db.GtEuusms.Join(db.GtEuuotps,
+                     u => u.UserId,
+                     f => f.UserId,
+                     (u, f) => new { u, f })
+                 .Where(w => w.u.CreatePasswordInNextSignIn && w.u.UserId==userId && w.u.ActiveStatus && (!w.f.UsageStatus) && w.f.ActiveStatus)
+                 .Select(r => new
+                 {
+                     r.f.Otpnumber,
+                     r.u.UserId,
+                     r.u.LoginId,
+                     r.u.LoginDesc
+                    
+                 }).FirstOrDefaultAsync();
+
+                if (lg != null)
+                {
+                    if (lg.Otpnumber == otp)
+                    {
+                        us.IsSucceeded = true;
+                        us.Message = "Your OTP has Sucessfully Validated";
+                        us.LoginID = lg.LoginId;
+                        us.UserID = lg.UserId;
+                        us.LoginDesc = lg.LoginDesc;
+                    }
+                    else
+                    {
+                        us.IsSucceeded = false;
+                        us.Message = "Invalid OTP";
+                        us.UserID = lg.UserId;
+                    }
+                }
+                else
+                {
+                    us.IsSucceeded = false;
+                    us.Message = "Invalid OTP";
+                }
+
+                return us;
+            }
+        }
+        #endregion
+        #region Change Password
+
+        public async Task<DO_ReturnParameter> CreateUserPasswordINNextSignIn(int userId, string password)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    byte[] Epass = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(password));
+
+                    var userexists = db.GtEuusms.Where(x => x.UserId == userId && x.ActiveStatus == true && x.CreatePasswordInNextSignIn).FirstOrDefault();
+                    if (userexists != null)
+                    {
+                        var PasswordExist = db.GtEuuspws.Where(x => x.UserId == userId).FirstOrDefault();
+                        if (PasswordExist == null)
+                        {
+                            var _pas = new GtEuuspw()
+                            {
+                                UserId = userId,
+                                EPasswd = Epass,
+                                LastPasswdDate = DateTime.Now,
+                                ActiveStatus = true,
+                                FormId = "0",
+                                CreatedBy = userId,
+                                CreatedOn = DateTime.Now,
+                                CreatedTerminal = "GTPL"
+
+                            };
+                            db.GtEuuspws.Add(_pas);
+                            db.SaveChanges();
+
+
+                            var serialno = db.GtEuusphs.Select(x => x.SerialNumber).DefaultIfEmpty().Max() + 1;
+                            var passhistory = new GtEuusph
+                            {
+                                UserId = userId,
+                                SerialNumber = serialno,
+                                EPasswd = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(password)),
+                                LastPasswdChangedDate = DateTime.Now,
+                                ActiveStatus = true,
+                                FormId = "0",
+                                CreatedBy = userId,
+                                CreatedOn = DateTime.Now,
+                                CreatedTerminal = "GTPL"
+                            };
+                            db.GtEuusphs.Add(passhistory);
+                            db.SaveChanges();
+                            userexists.CreatePasswordInNextSignIn = false;
+                            db.SaveChanges();
+
+                            var otppw = db.GtEuuotps.Where(x => x.UserId == userId && x.ActiveStatus).FirstOrDefault();
+                            if (otppw != null)
+                            {
+                                otppw.ActiveStatus = false;
+                                otppw.UsageStatus = true;
+                                otppw.ModifiedOn = DateTime.Now;
+                                otppw.ModifiedBy = userId;
+                                otppw.ModifiedTerminal = "GTPL";
+                            }
+                            db.SaveChanges();
+
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "S0003", Message = string.Format(_localizer[name: "S0003"]) };
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, StatusCode = "W0014", Message = string.Format(_localizer[name: "W0014"]) };
+                        }
+
+
+                    }
+                    else
+                    {
+                        return new DO_ReturnParameter() { Status = false, StatusCode = "W0014", Message = string.Format(_localizer[name: "W0014"]) };
+
+                    }
+                }
+            }
+        }
+        public async Task<DO_ReturnParameter> ChkIsCreatePasswordInNextSignIn(string loginId)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var ds = await db.GtEuusms.Where(x => x.LoginId == loginId && x.CreatePasswordInNextSignIn && x.ActiveStatus).FirstOrDefaultAsync();
+                    if (ds != null)
+                    {
+                        return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = ds.UserId, Key = ds.LoginDesc };
+                    }
+                    else
+                    {
+                        return new DO_ReturnParameter() { Status = true, StatusCode = "0" };
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        #endregion
     }
 }

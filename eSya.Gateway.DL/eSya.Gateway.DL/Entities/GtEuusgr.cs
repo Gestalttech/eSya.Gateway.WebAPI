@@ -5,8 +5,8 @@ namespace eSya.Gateway.DL.Entities
 {
     public partial class GtEuusgr
     {
+        public int BusinessKey { get; set; }
         public int UserGroup { get; set; }
-        public int UserType { get; set; }
         public int UserRole { get; set; }
         public int MenuKey { get; set; }
         public bool ActiveStatus { get; set; }
@@ -19,6 +19,5 @@ namespace eSya.Gateway.DL.Entities
         public string? ModifiedTerminal { get; set; }
 
         public virtual GtEcapcd UserGroupNavigation { get; set; } = null!;
-        public virtual GtEcapcd UserTypeNavigation { get; set; } = null!;
     }
 }

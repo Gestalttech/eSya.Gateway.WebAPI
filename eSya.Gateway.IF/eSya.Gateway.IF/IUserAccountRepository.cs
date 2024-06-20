@@ -25,6 +25,13 @@ namespace eSya.Gateway.IF
 
         Task<DO_UserAccount> GetUserBusinessLocation(int userID);
 
+        #region OTP Process
+        Task<DO_UserAccount> ValidateCreateUserOTP(int userId, string otp);
+        #endregion
 
+        #region Create Password
+        Task<DO_ReturnParameter> CreateUserPasswordINNextSignIn(int userId, string password);
+        Task<DO_ReturnParameter> ChkIsCreatePasswordInNextSignIn(string loginId);
+        #endregion
     }
 }

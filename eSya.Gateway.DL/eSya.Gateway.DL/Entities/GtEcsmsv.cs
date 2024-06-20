@@ -7,6 +7,7 @@ namespace eSya.Gateway.DL.Entities
     {
         public string Smsvariable { get; set; } = null!;
         public string Smscomponent { get; set; } = null!;
+        public string FormId { get; set; } = null!;
         public bool ActiveStatus { get; set; }
         public int CreatedBy { get; set; }
         public DateTime CreatedOn { get; set; }

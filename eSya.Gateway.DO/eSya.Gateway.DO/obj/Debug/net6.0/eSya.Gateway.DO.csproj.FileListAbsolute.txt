@@ -46,3 +46,15 @@ D:\Projects\eSyaJsonworking\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\
 D:\Projects\eSyaJsonworking\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\refint\eSya.Gateway.DO.dll
 D:\Projects\eSyaJsonworking\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\eSya.Gateway.DO.pdb
 D:\Projects\eSyaJsonworking\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\ref\eSya.Gateway.DO.dll
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\bin\Debug\net6.0\eSya.Gateway.DO.deps.json
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\bin\Debug\net6.0\eSya.Gateway.DO.dll
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\bin\Debug\net6.0\eSya.Gateway.DO.pdb
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\eSya.Gateway.DO.GeneratedMSBuildEditorConfig.editorconfig
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\eSya.Gateway.DO.AssemblyInfoInputs.cache
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\eSya.Gateway.DO.AssemblyInfo.cs
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\eSya.Gateway.DO.csproj.CoreCompileInputs.cache
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\eSya.Gateway.DO.sourcelink.json
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\eSya.Gateway.DO.dll
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\refint\eSya.Gateway.DO.dll
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\eSya.Gateway.DO.pdb
+D:\Projects\eSyaProjects2022\eSya.Gateway.WebAPI\eSya.Gateway.DO\eSya.Gateway.DO\obj\Debug\net6.0\ref\eSya.Gateway.DO.dll

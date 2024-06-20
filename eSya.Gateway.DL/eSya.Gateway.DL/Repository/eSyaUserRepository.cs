@@ -74,8 +74,11 @@ namespace eSya.Gateway.DL.Repository
                                         f => f.MenuKey,
                                         u => u.MenuKey,
                                         (f, u) => new { f, u })
-                                    .Where(w => w.u.UserGroup == userGroup && w.u.UserType == userType
-                                        && w.u.ActiveStatus && w.f.ActiveStatus)
+                                    .Where(w =>
+                                    //SNO-12
+                                    //w.u.UserGroup == userGroup && w.u.UserType == userType
+                                    //    && w.u.ActiveStatus &&
+                                        w.f.ActiveStatus)
                                     .Select(r => new
                                     {
                                         r.f.MainMenuId,
@@ -331,32 +334,32 @@ namespace eSya.Gateway.DL.Repository
                 throw ex;
             }
         }
+        //SNO-1
+        //public async Task<List<DO_ApplicationCodes>> GetUserTypeByGroup(int userGroup)
+        //{
+        //    try
+        //    {
+        //        using (var db = new eSyaEnterprise())
+        //        {
+        //            var ut = db.GtEuusgrs
+        //                    .Join(db.GtEcapcds,
+        //                    u => new { u.UserType },
+        //                    a => new { UserType = a.ApplicationCode},
+        //                    (u, a) => new { u, a})
+        //                 .Select(r => new DO_ApplicationCodes
+        //                 {
+        //                     ApplicationCode = r.a.ApplicationCode,
+        //                     CodeDesc = r.a.CodeDesc,
+        //                 }).Distinct().ToListAsync();
 
-        public async Task<List<DO_ApplicationCodes>> GetUserTypeByGroup(int userGroup)
-        {
-            try
-            {
-                using (var db = new eSyaEnterprise())
-                {
-                    var ut = db.GtEuusgrs
-                            .Join(db.GtEcapcds,
-                            u => new { u.UserType },
-                            a => new { UserType = a.ApplicationCode},
-                            (u, a) => new { u, a})
-                         .Select(r => new DO_ApplicationCodes
-                         {
-                             ApplicationCode = r.a.ApplicationCode,
-                             CodeDesc = r.a.CodeDesc,
-                         }).Distinct().ToListAsync();
-
-                    return await ut;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
+        //            return await ut;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
+        //}
 
         public async Task<DO_UserAccount> GetBusinessLocation()
         {
@@ -367,7 +370,7 @@ namespace eSya.Gateway.DL.Repository
                 var ub = await db.GtEcbslns
                             .Where(w => w.ActiveStatus).ToListAsync();
 
-                us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.BusinessKey, x.BusinessName))
+                us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.BusinessKey, x.BusinessName + "-" + x.LocationDescription))
                    .ToDictionary(x => x.Key, x => x.Value);
 
                 return us;

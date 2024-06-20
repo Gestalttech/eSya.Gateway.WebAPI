@@ -8,6 +8,7 @@ namespace eSya.Gateway.DL.Entities
         public string Smsid { get; set; } = null!;
         public int ParameterId { get; set; }
         public bool ParmAction { get; set; }
+        public string FormId { get; set; } = null!;
         public bool ActiveStatus { get; set; }
         public int CreatedBy { get; set; }
         public DateTime CreatedOn { get; set; }

@@ -148,23 +148,25 @@ namespace eSya.Gateway.DL.Repository
                        .Where(w => w.UserId == id)
                        .Select(r => new DO_Master
                        {
-                           MobileNumber = r.Isdcode.ToString() + r.MobileNumber,
+                           //SNO-11
+                           //MobileNumber = r.Isdcode.ToString() + r.MobileNumber,
+                           MobileNumber="ABDUL RAHIMAN",
                            ID = r.LoginId,
                            Name = r.LoginDesc
                        })
                        .FirstOrDefaultAsync();
                 }
-                //if (type == (int)smsParams.Doctor)
-                //{
-                //    us = await db.gt
-                //       .Where(w => w.UserId == id)
-                //       .Select(r => new DO_Master
-                //       {
-                //           MobileNumber = r.MobileNumber,
-                //           Name = r.LoginDesc
-                //       })
-                //       .FirstOrDefaultAsync();
-                //}
+                //////if (type == (int)smsParams.Doctor)
+                //////{
+                //////    us = await db.gt
+                //////       .Where(w => w.UserId == id)
+                //////       .Select(r => new DO_Master
+                //////       {
+                //////           MobileNumber = r.MobileNumber,
+                //////           Name = r.LoginDesc
+                //////       })
+                //////       .FirstOrDefaultAsync();
+                //////}
                 return us;
             }
         }

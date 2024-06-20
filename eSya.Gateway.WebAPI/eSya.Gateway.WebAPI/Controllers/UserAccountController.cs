@@ -3,6 +3,7 @@ using eSya.Gateway.IF;
 using eSya.Gateway.WebAPI.Utility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace eSya.Gateway.WebAPI.Controllers
 {
@@ -109,5 +110,29 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _userAccountRepository.GetUserBusinessLocation(userID);
             return Ok(ds);
         }
+        #region OTP Process
+        [HttpGet]
+        public async Task<IActionResult> ValidateCreateUserOTP(int userId, string otp)
+        {
+            var ds = await _userAccountRepository.ValidateCreateUserOTP(userId, otp);
+            return Ok(ds);
+        }
+        #endregion
+
+        #region Create Password
+        [HttpGet]
+        public async Task<IActionResult> CreateUserPasswordINNextSignIn(int userId, string password)
+        {
+            var ds = await _userAccountRepository.CreateUserPasswordINNextSignIn(userId, password);
+            return Ok(ds);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ChkIsCreatePasswordInNextSignIn(string loginId)
+        {
+            var ds = await _userAccountRepository.ChkIsCreatePasswordInNextSignIn(loginId);
+            return Ok(ds);
+        }
+        #endregion
     }
 }

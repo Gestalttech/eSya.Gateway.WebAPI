@@ -5,13 +5,8 @@ namespace eSya.Gateway.DL.Entities
 {
     public partial class GtEuusrl
     {
-        public int UserId { get; set; }
-        public int BusinessKey { get; set; }
-        public int UserGroup { get; set; }
-        public int UserType { get; set; }
         public int UserRole { get; set; }
-        public DateTime EffectiveFrom { get; set; }
-        public DateTime? EffectiveTill { get; set; }
+        public int ActionId { get; set; }
         public bool ActiveStatus { get; set; }
         public string FormId { get; set; } = null!;
         public int CreatedBy { get; set; }

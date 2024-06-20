@@ -15,8 +15,8 @@ namespace eSya.Gateway.IF
         Task<List<DO_eSyaUser>> GeteSyaUser();
         Task<DO_eSyaUser> GeteSyaUserByUserID(int userID);
         Task<DO_eSyaUser> GeteSyaUserByLoginID(string loginID);
-
-        Task<List<DO_ApplicationCodes>> GetUserTypeByGroup(int userGroup);
+        //SNO-1
+        //Task<List<DO_ApplicationCodes>> GetUserTypeByGroup(int userGroup);
 
         Task<DO_UserAccount> GetBusinessLocation();
 

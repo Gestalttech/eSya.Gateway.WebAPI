@@ -13,6 +13,10 @@
   "W0011": "Invalid OTP",
   "W0012": "You used this password recently. Please choose a different one",
   "W0013": "Invalid Current Password",
+  "W0014": "Password has already created please login with valid User ID and Password",
+  "W0015": "Password has Not Created",
+  "W0016": "Create Password for first Login",
   "S0001": "Saved Sucessfully",
-  "S0002": "Updated Sucessfully"
+  "S0002": "Updated Sucessfully",
+  "S0003": "Password has been created sucessfully"
 }

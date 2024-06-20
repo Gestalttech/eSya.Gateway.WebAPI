@@ -69,13 +69,13 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _eSyaUserRepository.GeteSyaUserByLoginID(loginID);
             return Ok(ds);
         }
-
-        [HttpGet]
-        public async Task<IActionResult> GetUserTypeByGroup(int userGroup)
-        {
-            var ds = await _eSyaUserRepository.GetUserTypeByGroup(userGroup);
-            return Ok(ds);
-        }
+        //SNO-1
+        //[HttpGet]
+        //public async Task<IActionResult> GetUserTypeByGroup(int userGroup)
+        //{
+        //    var ds = await _eSyaUserRepository.GetUserTypeByGroup(userGroup);
+        //    return Ok(ds);
+        //}
 
         [HttpGet]
         public async Task<IActionResult> GetBusinessLocation()

@@ -8,14 +8,14 @@ namespace eSya.Gateway.DL.Entities
         public int DoctorId { get; set; }
         public string DoctorName { get; set; } = null!;
         public string DoctorShortName { get; set; } = null!;
-        public string Gender { get; set; } = null!;
+        public int Gender { get; set; }
         public string DoctorRegnNo { get; set; } = null!;
         public int Isdcode { get; set; }
         public string MobileNumber { get; set; } = null!;
         public string? EmailId { get; set; }
         public int DoctorClass { get; set; }
         public int DoctorCategory { get; set; }
-        public string TraiffFrom { get; set; } = null!;
+        public int TraiffFrom { get; set; }
         public string? Password { get; set; }
         public int SeniorityLevel { get; set; }
         public bool ActiveStatus { get; set; }

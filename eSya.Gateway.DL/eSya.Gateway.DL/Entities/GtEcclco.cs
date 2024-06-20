@@ -5,11 +5,13 @@ namespace eSya.Gateway.DL.Entities
 {
     public partial class GtEcclco
     {
-        public int BusinessKey { get; set; }
-        public decimal FinancialYear { get; set; }
+        public string CalenderType { get; set; } = null!;
+        public int Year { get; set; }
+        public int StartMonth { get; set; }
+        public string CalenderKey { get; set; } = null!;
         public DateTime FromDate { get; set; }
         public DateTime TillDate { get; set; }
-        public bool Status { get; set; }
+        public bool ActiveStatus { get; set; }
         public string FormId { get; set; } = null!;
         public int CreatedBy { get; set; }
         public DateTime CreatedOn { get; set; }
@@ -17,7 +19,5 @@ namespace eSya.Gateway.DL.Entities
         public int? ModifiedBy { get; set; }
         public DateTime? ModifiedOn { get; set; }
         public string? ModifiedTerminal { get; set; }
-
-        public virtual GtEcbsln BusinessKeyNavigation { get; set; } = null!;
     }
 }

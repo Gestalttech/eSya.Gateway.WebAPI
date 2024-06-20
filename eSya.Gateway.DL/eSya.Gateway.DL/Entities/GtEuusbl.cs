@@ -12,9 +12,12 @@ namespace eSya.Gateway.DL.Entities
 
         public int UserId { get; set; }
         public int BusinessKey { get; set; }
-        public int? UserGroup { get; set; }
-        public int? UserType { get; set; }
         public bool AllowMtfy { get; set; }
+        public string PreferredLanguage { get; set; } = null!;
+        public int Isdcode { get; set; }
+        public string MobileNumber { get; set; } = null!;
+        public int IsdcodeWan { get; set; }
+        public string WhatsappNumber { get; set; } = null!;
         public bool ActiveStatus { get; set; }
         public string FormId { get; set; } = null!;
         public int CreatedBy { get; set; }
