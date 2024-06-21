@@ -1563,24 +1563,35 @@ namespace eSya.Gateway.DL.Repository
             {
                 using (var dbContext = db.Database.BeginTransaction())
                 {            
-                            var QId = db.GtEuussqs.Select(x => x.SecurityQuestionId).DefaultIfEmpty().Max() + 1;
-                            var Ques = new GtEuussq
-                            {
-                                UserId = obj.UserId,
-                                SecurityQuestionId = QId,
-                                EffectiveFrom=DateTime.Now,
-                                SecurityAnswer = CryptGeneration.Encrypt(obj.SecurityAnswer),
-                                EffectiveTill = obj.EffectiveTill,
-                                ActiveStatus = true,
-                                FormId = obj.FormID,
-                                CreatedBy = obj.UserId,
-                                CreatedOn = DateTime.Now,
-                                CreatedTerminal = obj.TerminalID
-                            };
-                            db.GtEuussqs.Add(Ques);
-                            await  db.SaveChangesAsync();
-                            dbContext.Commit();
-                            return new DO_ReturnParameter() { Status = true, StatusCode = "S0004", Message = string.Format(_localizer[name: "S0004"]) };
+                            var QId = db.GtEuussqs.Where(x => x.SecurityQuestionId==obj.SecurityQuestionId && x.UserId==obj.UserId
+                            && x.EffectiveFrom==obj.EffectiveFrom).FirstOrDefault();
+                    if (QId != null)
+                    {
+                        return new DO_ReturnParameter() { Status = false, StatusCode = "W0017", Message = string.Format(_localizer[name: "W0017"]) };
+
+                    }
+                    else
+                    {
+                        var Ques = new GtEuussq
+                        {
+                            UserId = obj.UserId,
+                            SecurityQuestionId = obj.SecurityQuestionId,
+                            EffectiveFrom = DateTime.Now,
+                            SecurityAnswer = CryptGeneration.Encrypt(obj.SecurityAnswer),
+                            EffectiveTill = obj.EffectiveTill,
+                            ActiveStatus = true,
+                            FormId = obj.FormID,
+                            CreatedBy = obj.UserId,
+                            CreatedOn = DateTime.Now,
+                            CreatedTerminal = obj.TerminalID
+                        };
+                        db.GtEuussqs.Add(Ques);
+                        await db.SaveChangesAsync();
+                        dbContext.Commit();
+                        return new DO_ReturnParameter() { Status = true, StatusCode = "S0004", Message = string.Format(_localizer[name: "S0004"]) };
+
+                    }
+                           
                 }
             }
         }

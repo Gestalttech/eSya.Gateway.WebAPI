@@ -16,6 +16,7 @@
   "W0014": "Password has already created please login with valid User ID and Password",
   "W0015": "Password has Not Created",
   "W0016": "Create Password for first Login",
+  "W0017": "Question already choosen try another one",
   "S0001": "Saved Sucessfully",
   "S0002": "Updated Sucessfully",
   "S0003": "Password has been created sucessfully",
