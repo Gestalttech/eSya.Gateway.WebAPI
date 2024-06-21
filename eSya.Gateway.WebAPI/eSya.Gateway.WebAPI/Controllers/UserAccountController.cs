@@ -134,5 +134,14 @@ namespace eSya.Gateway.WebAPI.Controllers
             return Ok(ds);
         }
         #endregion
+
+        #region User Security Question
+        [HttpPost]
+        public async Task<IActionResult> InsertUserSecurityQuestion(DO_UserSecurityQuestions obj)
+        {
+            var ds = await _userAccountRepository.InsertUserSecurityQuestion(obj);
+            return Ok(ds);
+        }
+        #endregion
     }
 }

@@ -18,5 +18,6 @@
   "W0016": "Create Password for first Login",
   "S0001": "Saved Sucessfully",
   "S0002": "Updated Sucessfully",
-  "S0003": "Password has been created sucessfully"
+  "S0003": "Password has been created sucessfully",
+  "S0004": "Security Question has been created sucessfully"
 }

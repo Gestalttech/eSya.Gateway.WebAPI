@@ -53,6 +53,7 @@ namespace eSya.Gateway.DL.Entities
         public virtual DbSet<GtEuusph> GtEuusphs { get; set; } = null!;
         public virtual DbSet<GtEuuspw> GtEuuspws { get; set; } = null!;
         public virtual DbSet<GtEuusrl> GtEuusrls { get; set; } = null!;
+        public virtual DbSet<GtEuussq> GtEuussqs { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -1186,6 +1187,36 @@ namespace eSya.Gateway.DL.Entities
                 entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
 
                 entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<GtEuussq>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.SecurityQuestionId, e.EffectiveFrom });
+
+                entity.ToTable("GT_EUUSSQ");
+
+                entity.Property(e => e.UserId).HasColumnName("UserID");
+
+                entity.Property(e => e.SecurityQuestionId).HasColumnName("SecurityQuestionID");
+
+                entity.Property(e => e.EffectiveFrom).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.EffectiveTill).HasColumnType("datetime");
+
+                entity.Property(e => e.FormId)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("FormID");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.SecurityAnswer).HasMaxLength(250);
             });
 
             OnModelCreatingPartial(modelBuilder);

@@ -33,5 +33,8 @@ namespace eSya.Gateway.IF
         Task<DO_ReturnParameter> CreateUserPasswordINNextSignIn(int userId, string password);
         Task<DO_ReturnParameter> ChkIsCreatePasswordInNextSignIn(string loginId);
         #endregion
+        #region User Security Question
+        Task<DO_ReturnParameter> InsertUserSecurityQuestion(DO_UserSecurityQuestions obj);
+        #endregion
     }
 }

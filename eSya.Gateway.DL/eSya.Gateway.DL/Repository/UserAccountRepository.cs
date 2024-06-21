@@ -1512,7 +1512,7 @@ namespace eSya.Gateway.DL.Repository
                             db.SaveChanges();
 
                             dbContext.Commit();
-                            return new DO_ReturnParameter() { Status = true, StatusCode = "S0003", Message = string.Format(_localizer[name: "S0003"]) };
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "S0003", Message = string.Format(_localizer[name: "S0003"]),ID= userId};
 
                         }
                         else
@@ -1554,6 +1554,36 @@ namespace eSya.Gateway.DL.Repository
             }
         }
 
+        #endregion
+
+        #region User Security Question
+        public async Task<DO_ReturnParameter> InsertUserSecurityQuestion(DO_UserSecurityQuestions obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {            
+                            var QId = db.GtEuussqs.Select(x => x.SecurityQuestionId).DefaultIfEmpty().Max() + 1;
+                            var Ques = new GtEuussq
+                            {
+                                UserId = obj.UserId,
+                                SecurityQuestionId = QId,
+                                EffectiveFrom=DateTime.Now,
+                                SecurityAnswer = CryptGeneration.Encrypt(obj.SecurityAnswer),
+                                EffectiveTill = obj.EffectiveTill,
+                                ActiveStatus = true,
+                                FormId = obj.FormID,
+                                CreatedBy = obj.UserId,
+                                CreatedOn = DateTime.Now,
+                                CreatedTerminal = obj.TerminalID
+                            };
+                            db.GtEuussqs.Add(Ques);
+                            await  db.SaveChangesAsync();
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "S0004", Message = string.Format(_localizer[name: "S0004"]) };
+                }
+            }
+        }
         #endregion
     }
 }
