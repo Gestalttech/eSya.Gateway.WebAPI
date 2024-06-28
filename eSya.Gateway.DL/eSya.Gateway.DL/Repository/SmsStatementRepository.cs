@@ -140,33 +140,35 @@ namespace eSya.Gateway.DL.Repository
         {
             using (var db = new eSyaEnterprise())
             {
-                DO_Master us = new DO_Master();
+                DO_Master? us = new DO_Master();
 
                 if (type == (int)smsParams.User)
                 {
-                    us = await db.GtEuusms
-                       .Where(w => w.UserId == id)
-                       .Select(r => new DO_Master
-                       {
-                           //SNO-11
-                           //MobileNumber = r.Isdcode.ToString() + r.MobileNumber,
-                           MobileNumber="ABDUL RAHIMAN",
-                           ID = r.LoginId,
-                           Name = r.LoginDesc
-                       })
-                       .FirstOrDefaultAsync();
+                    us = await db.GtEuusms.Join(db.GtEuusbls,
+                           u => u.UserId,
+                           b => b.UserId,
+                           (u, b) => new { u, b }).Where(x => x.u.UserId == id).
+                           Select(r => new DO_Master
+                           {
+                               MobileNumber = r.b.Isdcode.ToString() + r.b.MobileNumber,
+                               ID = r.u.LoginId,
+                               Name = r.u.LoginDesc
+                           }).FirstOrDefaultAsync();
+
+
+                    //us = await db.GtEuusms
+                    //   .Where(w => w.UserId == id)
+                    //   .Select(r => new DO_Master
+                    //   {
+                    //       //SNO-11
+                    //       //MobileNumber = r.Isdcode.ToString() + r.MobileNumber,
+                    //       MobileNumber="ABDUL RAHIMAN",
+                    //       ID = r.LoginId,
+                    //       Name = r.LoginDesc
+                    //   })
+                    //   .FirstOrDefaultAsync();
                 }
-                //////if (type == (int)smsParams.Doctor)
-                //////{
-                //////    us = await db.gt
-                //////       .Where(w => w.UserId == id)
-                //////       .Select(r => new DO_Master
-                //////       {
-                //////           MobileNumber = r.MobileNumber,
-                //////           Name = r.LoginDesc
-                //////       })
-                //////       .FirstOrDefaultAsync();
-                //////}
+               
                 return us;
             }
         }

@@ -36,5 +36,10 @@ namespace eSya.Gateway.IF
         #region User Security Question
         Task<DO_ReturnParameter> InsertUserSecurityQuestion(DO_UserSecurityQuestions obj);
         #endregion
+
+        #region Get User ID
+        Task<DO_UserAccount> GetOTPbyMobileNumber(string mobileNo);
+        Task<DO_UserAccount> ValidateUserbyOTP(String mobileNo, string otp, int expirytime);
+        #endregion
     }
 }

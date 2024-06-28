@@ -143,5 +143,21 @@ namespace eSya.Gateway.WebAPI.Controllers
             return Ok(ds);
         }
         #endregion
+
+        #region Get User ID
+        [HttpGet]
+        public async Task<IActionResult> GetOTPbyMobileNumber(string mobileNo)
+        {
+            var ds = await _userAccountRepository.GetOTPbyMobileNumber(mobileNo);
+            return Ok(ds);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ValidateUserbyOTP(String mobileNo, string otp, int expirytime)
+        {
+            var ds = await _userAccountRepository.ValidateUserbyOTP(mobileNo, otp, expirytime);
+            return Ok(ds);
+        }
+        #endregion
     }
 }

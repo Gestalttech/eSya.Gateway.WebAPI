@@ -14,6 +14,7 @@ using NG.Gateway.DO.StaticVariables;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Http;
 using System.Collections;
+using static System.Net.WebRequestMethods;
 
 namespace eSya.Gateway.DL.Repository
 {
@@ -1367,42 +1368,6 @@ namespace eSya.Gateway.DL.Repository
         }
 
         #region OTP Process
-        //has to implement once sir give table structure
-        //public async Task<DO_UserAccount> ValidateUserMobile(int UserID,string mobileNumber)
-        //{
-        //    using (var db = new eSyaEnterprise())
-        //    {
-        //        DO_UserAccount us = new DO_UserAccount();
-
-        //        var lg = await db.GtEuusbls
-        //            .Where(w => w.MobileNumber == mobileNumber && w.UserId== UserID
-        //                        && w.ActiveStatus == true)
-        //            .FirstOrDefaultAsync();
-
-        //        if (lg != null)
-        //        {
-        //            //[dbo].[GT_EUUOTP]
-        //            Random rnd = new Random();
-        //            var OTP = rnd.Next(100000, 999999).ToString();
-
-        //            us.IsSucceeded = true;
-        //            us.UserID = lg.UserId;
-        //            us.OTP = OTP;
-
-        //            lg.Otpnumber = OTP;
-        //            lg.OtpgeneratedDate = System.DateTime.Now;
-        //            db.SaveChanges();
-        //        }
-        //        else
-        //        {
-        //            us.IsSucceeded = false;
-        //            us.StatusCode = "404";
-        //        }
-
-        //        return us;
-        //    }
-        //}
-
         public async Task<DO_UserAccount> ValidateCreateUserOTP(int userId, string otp)
         {
             using (var db = new eSyaEnterprise())
@@ -1450,8 +1415,8 @@ namespace eSya.Gateway.DL.Repository
             }
         }
         #endregion
-        #region Change Password
 
+        #region Change Password
         public async Task<DO_ReturnParameter> CreateUserPasswordINNextSignIn(int userId, string password)
         {
             using (eSyaEnterprise db = new eSyaEnterprise())
@@ -1593,6 +1558,161 @@ namespace eSya.Gateway.DL.Repository
                     }
                            
                 }
+            }
+        }
+        #endregion
+
+        #region Get User ID
+        public async Task<DO_UserAccount> GetOTPbyMobileNumber(string mobileNo)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+
+                    try
+                    {
+
+                        DO_UserAccount us = new DO_UserAccount();
+                        var user = await db.GtEuusbls.Join(db.GtEuusms,
+                            b => b.UserId,
+                            u => u.UserId,
+                            (b, u) => new { b, u })
+                        .Where(w => w.b.MobileNumber.ToUpper().Replace(" ", "") == mobileNo.ToUpper().Replace(" ", "") && w.b.ActiveStatus && w.u.ActiveStatus)
+                         .Select(r => new
+                         {
+                             r.b.MobileNumber,
+                             r.u.UserId,
+                             r.u.LoginId,
+                             r.u.LoginDesc
+                         }).FirstOrDefaultAsync();
+
+                        if (user != null)
+                        {
+
+                            var userOtp = db.GtEuuotps.Where(x => x.UserId == user.UserId).FirstOrDefault();
+                            Random rnd = new Random();
+                            var OTP = rnd.Next(100000, 999999).ToString();
+
+                            if (userOtp == null)
+                            {
+                                var lotp = new GtEuuotp()
+                                {
+                                    UserId = user.UserId,
+                                    Otpnumber = OTP,
+                                    OtpgeneratedDate = System.DateTime.Now,
+                                    UsageStatus = false,
+                                    ActiveStatus = true,
+                                    FormId = "0",
+                                    CreatedBy = user.UserId,
+                                    CreatedOn = System.DateTime.Now,
+                                    CreatedTerminal = "GTPL"
+                                };
+                                db.GtEuuotps.Add(lotp);
+                                db.SaveChanges();
+
+                            }
+                            else
+                            {
+                                userOtp.Otpnumber= OTP;
+                                userOtp.UsageStatus = false;
+                                userOtp.ActiveStatus = true;
+                                userOtp.OtpgeneratedDate = System.DateTime.Now;
+                                userOtp.ModifiedBy = user.UserId;
+                                userOtp.ModifiedOn = System.DateTime.Now;
+                                userOtp.ModifiedTerminal = "GTPL";
+                            }
+                            db.SaveChanges();
+                            dbContext.Commit();
+                            us.IsSucceeded = true;
+                            us.Message = "Mobile Number Validated";
+                            us.OTP = OTP;
+                        }
+                        else
+                        {
+                            us.IsSucceeded = false;
+                            us.Message = "Mobile Number Not Exist";
+
+                        }
+                        return us;
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+                
+                }
+            }
+        }
+        public async Task<DO_UserAccount> ValidateUserbyOTP(String mobileNo, string otp, int expirytime)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+
+                var user = await db.GtEuusbls.Join(db.GtEuusms,
+                            b => b.UserId,
+                            u => u.UserId,
+                            (b, u) => new { b, u })
+                        .Where(w => w.b.MobileNumber.ToUpper().Replace(" ", "") == mobileNo.ToUpper().Replace(" ", "") && w.b.ActiveStatus && w.u.ActiveStatus)
+                         .Select(r => new
+                         {
+                             r.b.MobileNumber,
+                             r.u.UserId,
+                             r.u.LoginId,
+                             r.u.LoginDesc,
+                             
+                         }).FirstOrDefaultAsync();
+
+                if (user != null)
+                {
+                    var validTime = DateTime.Now.AddMinutes(-expirytime);
+
+                    var userOtp = db.GtEuuotps.Where(x => x.UserId == user.UserId).FirstOrDefault();
+
+                    if (userOtp!=null)
+                    {
+                        var expOtp = await db.GtEuuotps
+                       .Where(t =>  t.OtpgeneratedDate >= validTime && (!t.UsageStatus))
+                       .FirstOrDefaultAsync();
+                        if(expOtp == null)
+                        {
+                            us.IsSucceeded = false;
+                            us.Message = "OTP Expired";
+                            return us;
+                        }
+                        
+                        if (userOtp.Otpnumber != otp)
+                        {
+                            us.IsSucceeded = false;
+                            us.Message = "In Valid OTP";
+                            return us;
+                        }
+                        if (userOtp.Otpnumber == otp)
+                        {
+                            us.IsSucceeded = true;
+                            us.Message = "Your OTP has Sucessfully Validated";
+                            us.LoginID = user.LoginId;
+                            us.UserID = user.UserId;
+                            us.LoginDesc = user.LoginDesc;
+                            userOtp.UsageStatus = true;
+                            userOtp.ActiveStatus = false;
+                            userOtp.ModifiedOn = System.DateTime.Now;
+                            db.SaveChanges();
+
+                        }
+
+                    }
+                    
+                }
+                else
+                {
+                    us.IsSucceeded = false;
+                    us.Message = "Mobile Number Not Exist";
+                }
+
+                return us;
             }
         }
         #endregion
