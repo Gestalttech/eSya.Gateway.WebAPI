@@ -10,4 +10,9 @@ namespace eSya.Gateway.DO
         public int RuleID { get; set; }
         public bool RuleStatus { get; set; }
     }
+    public class DO_eSyaLoginCulture
+    {
+        public string CultureCode { get; set; }
+        public string CultureDesc { get; set; }
+    }
 }

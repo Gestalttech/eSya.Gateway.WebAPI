@@ -31,6 +31,14 @@ namespace eSya.Gateway.WebAPI.Controllers
             return Ok(ds);
         }
 
+        #region eSya Culture
+        [HttpGet]
+        public async Task<IActionResult> GetActiveCultures()
+        {
+            var ds = await _applicationRulesRepository.GetActiveCultures();
+            return Ok(ds);
+        }
         
+        #endregion
     }
 }

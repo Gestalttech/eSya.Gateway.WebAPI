@@ -65,5 +65,28 @@ namespace eSya.Gateway.DL.Repository
                 throw ex;
             }
         }
+        #region eSya Culture
+        public async Task<List<DO_eSyaLoginCulture>> GetActiveCultures()
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var ds = db.GtEbeculs.Where(x=>x.ActiveStatus)
+                       .Select(s => new DO_eSyaLoginCulture
+                       {
+                           CultureCode = s.CultureCode,
+                           CultureDesc = s.CultureDesc
+                       }).OrderByDescending(h=>h.CultureDesc).ToListAsync();
+
+                    return await ds;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        #endregion
     }
 }

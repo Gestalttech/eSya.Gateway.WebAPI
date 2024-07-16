@@ -136,7 +136,7 @@ namespace eSya.Gateway.DL.Repository
                                 (u, b) => new { u, b })
                             .Where(w => w.u.UserId == lg.UserId);
 
-                        us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.LocationDescription))
+                        us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.BusinessName + "-" + x.b.LocationDescription))
                            .ToDictionary(x => x.Key, x => x.Value);
 
                         if (ub.Count() > 0)
@@ -150,21 +150,34 @@ namespace eSya.Gateway.DL.Repository
 
                             //.Select(x => (int)x.FinancialYear).Distinct().OrderByDescending(o => o).ToList();
 
-                            us.l_FinancialYear = db.GtEcclcos
-                               .Where(w => w.FromDate.Date <= System.DateTime.Now.Date)
+                          
 
-                            .Select(x => (int)x.Year).Distinct().OrderByDescending(o => o).ToList();
+                            us.l_FinancialYear = db.GtEcblcls
+                             .Where(x => x.ActiveStatus) // Filter active records
+                             .Select(x => x.CalenderKey) // Select the CalenderKey
+                             .Where(calenderKey => calenderKey.Length > 2) // Ensure the string has more than 2 characters
+                             .Select(calenderKey => calenderKey.Substring(2)) // Remove the first two characters
+                             .Select(calenderKey => calenderKey.Length > 4 ? calenderKey.Substring(0, 4) : calenderKey) // Truncate after four characters if length > 4
+                             .Distinct()
+                             .OrderByDescending(calenderKey => calenderKey)
+                             .Select(calenderKey => int.Parse(calenderKey)) // Convert to integer
+                             .ToList();
+
                         }
                         else
-                        {  //SNO-6
-                           //us.l_FinancialYear = db.GtEcclcos
-                           //     .Where(w => w.FromDate.Date >= System.DateTime.Now.Date
-                           //        && w.TillDate.Date <= System.DateTime.Now.Date)
-                           //     .Select(x => (int)x.FinancialYear).Distinct().OrderByDescending(o => o).ToList();
-                            us.l_FinancialYear = db.GtEcclcos
-                                 .Where(w => w.FromDate.Date >= System.DateTime.Now.Date
-                                    && w.TillDate.Date <= System.DateTime.Now.Date)
-                                 .Select(x => (int)x.Year).Distinct().OrderByDescending(o => o).ToList();
+                        {  
+
+                            us.l_FinancialYear = db.GtEcblcls
+                                .Where(x => x.ActiveStatus) // Filter active records
+                                .Select(x => x.CalenderKey) // Select the CalenderKey
+                                .Where(calenderKey => calenderKey.Length > 2) // Ensure the string has more than 2 characters
+                                .Select(calenderKey => calenderKey.Substring(2)) // Remove the first two characters
+                                .Select(calenderKey => calenderKey.Length > 4 ? calenderKey.Substring(0, 4) : calenderKey) // Truncate after four characters if length > 4
+                                .Distinct()
+                                .OrderByDescending(calenderKey => calenderKey)
+                                .Select(calenderKey => int.Parse(calenderKey)) // Convert to integer
+                                .ToList();
+
                         }
                     //SNO-6
                     //}
@@ -1716,5 +1729,6 @@ namespace eSya.Gateway.DL.Repository
             }
         }
         #endregion
+       
     }
 }

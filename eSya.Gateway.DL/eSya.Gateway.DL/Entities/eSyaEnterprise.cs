@@ -18,8 +18,10 @@ namespace eSya.Gateway.DL.Entities
         {
         }
 
+        public virtual DbSet<GtEbecul> GtEbeculs { get; set; } = null!;
         public virtual DbSet<GtEcapcd> GtEcapcds { get; set; } = null!;
         public virtual DbSet<GtEcaprl> GtEcaprls { get; set; } = null!;
+        public virtual DbSet<GtEcblcl> GtEcblcls { get; set; } = null!;
         public virtual DbSet<GtEcbsln> GtEcbslns { get; set; } = null!;
         public virtual DbSet<GtEcclco> GtEcclcos { get; set; } = null!;
         public virtual DbSet<GtEccncd> GtEccncds { get; set; } = null!;
@@ -66,6 +68,34 @@ namespace eSya.Gateway.DL.Entities
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<GtEbecul>(entity =>
+            {
+                entity.HasKey(e => e.CultureCode);
+
+                entity.ToTable("GT_EBECUL");
+
+                entity.Property(e => e.CultureCode)
+                    .HasMaxLength(25)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.CultureDesc)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.FormId)
+                    .HasMaxLength(10)
+                    .HasColumnName("FormID")
+                    .IsFixedLength();
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
+            });
+
             modelBuilder.Entity<GtEcapcd>(entity =>
             {
                 entity.HasKey(e => e.ApplicationCode)
@@ -125,6 +155,30 @@ namespace eSya.Gateway.DL.Entities
                     .HasForeignKey(d => d.ProcessId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_GT_ECAPRL_GT_ECPRRL");
+            });
+
+            modelBuilder.Entity<GtEcblcl>(entity =>
+            {
+                entity.HasKey(e => new { e.BusinessKey, e.CalenderKey });
+
+                entity.ToTable("GT_ECBLCL");
+
+                entity.Property(e => e.CalenderKey)
+                    .HasMaxLength(8)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.FormId)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("FormID");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
             });
 
             modelBuilder.Entity<GtEcbsln>(entity =>
