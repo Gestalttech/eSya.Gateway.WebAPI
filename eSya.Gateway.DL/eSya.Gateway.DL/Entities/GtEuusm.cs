@@ -11,6 +11,8 @@ namespace eSya.Gateway.DL.Entities
         public byte[]? Photo { get; set; }
         public string? PhotoUrl { get; set; }
         public string EMailId { get; set; } = null!;
+        public DateTime UserCreatedOn { get; set; }
+        public DateTime? FirstUseByUser { get; set; }
         public bool CreatePasswordInNextSignIn { get; set; }
         public int UnsuccessfulAttempt { get; set; }
         public DateTime? LoginAttemptDate { get; set; }

@@ -1476,6 +1476,7 @@ namespace eSya.Gateway.DL.Repository
                             db.GtEuusphs.Add(passhistory);
                             db.SaveChanges();
                             userexists.CreatePasswordInNextSignIn = false;
+                            userexists.FirstUseByUser =System.DateTime.Now;
                             db.SaveChanges();
 
                             var otppw = db.GtEuuotps.Where(x => x.UserId == userId && x.ActiveStatus).FirstOrDefault();
