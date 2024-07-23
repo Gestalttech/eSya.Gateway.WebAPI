@@ -25,6 +25,10 @@ namespace eSya.Gateway.IF
 
         Task<DO_UserAccount> GetUserBusinessLocation(int userID);
 
+        #region Check User is Authenticated
+        Task<DO_ReturnParameter> ChkIsUserAuthenticated(string loginId);
+        #endregion
+
         #region OTP Process
         Task<DO_UserAccount> ValidateCreateUserOTP(int userId, string otp);
         #endregion
@@ -34,7 +38,9 @@ namespace eSya.Gateway.IF
         Task<DO_ReturnParameter> ChkIsCreatePasswordInNextSignIn(string loginId);
         #endregion
         #region User Security Question
-        Task<DO_ReturnParameter> InsertUserSecurityQuestion(DO_UserSecurityQuestions obj);
+        Task<DO_ReturnParameter> ChkIsUserQuestionsExists(string loginID);
+        Task<int> GetNumberofQuestion(int GwRuleId);
+        Task<DO_ReturnParameter> InsertUserSecurityQuestion(List<DO_UserSecurityQuestions> obj);
         #endregion
 
         #region Get User ID

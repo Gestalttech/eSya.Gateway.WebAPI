@@ -28,6 +28,7 @@ namespace eSya.Gateway.DL.Entities
         public virtual DbSet<GtEcfmal> GtEcfmals { get; set; } = null!;
         public virtual DbSet<GtEcfmfd> GtEcfmfds { get; set; } = null!;
         public virtual DbSet<GtEcfmnm> GtEcfmnms { get; set; } = null!;
+        public virtual DbSet<GtEcgwrl> GtEcgwrls { get; set; } = null!;
         public virtual DbSet<GtEcltcd> GtEcltcds { get; set; } = null!;
         public virtual DbSet<GtEcltfc> GtEcltfcs { get; set; } = null!;
         public virtual DbSet<GtEcmamn> GtEcmamns { get; set; } = null!;
@@ -409,6 +410,35 @@ namespace eSya.Gateway.DL.Entities
                     .HasForeignKey(d => d.FormId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_GT_ECFMNM_GT_ECFMFD");
+            });
+
+            modelBuilder.Entity<GtEcgwrl>(entity =>
+            {
+                entity.HasKey(e => e.GwruleId);
+
+                entity.ToTable("GT_ECGWRL");
+
+                entity.Property(e => e.GwruleId)
+                    .ValueGeneratedNever()
+                    .HasColumnName("GWRuleID");
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.FormId)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("FormID");
+
+                entity.Property(e => e.Gwdesc)
+                    .HasMaxLength(75)
+                    .IsUnicode(false)
+                    .HasColumnName("GWDesc");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
             });
 
             modelBuilder.Entity<GtEcltcd>(entity =>
@@ -966,6 +996,8 @@ namespace eSya.Gateway.DL.Entities
                 entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
                 entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.ESyaAuthentication).HasColumnName("eSyaAuthentication");
 
                 entity.Property(e => e.FormId)
                     .HasMaxLength(10)

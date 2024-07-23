@@ -15,6 +15,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Http;
 using System.Collections;
 using static System.Net.WebRequestMethods;
+using Microsoft.Data.SqlClient.Server;
 
 namespace eSya.Gateway.DL.Repository
 {
@@ -60,12 +61,19 @@ namespace eSya.Gateway.DL.Repository
                         us.StatusCode = "W0016";
                         return us;
                     }
+                    if (!lg.IsUserAuthenticated)
+                    {
+                        us.IsSucceeded = false;
+                        us.Message = string.Format(_localizer[name: "W0018"]);
+                        us.StatusCode = "W0018";
+                        return us;
+                    }
                     var validpassword = db.GtEuuspws.Where(x => x.UserId == lg.UserId && x.ActiveStatus).FirstOrDefault();
-                    if (validpassword!=null)
+                    if (validpassword != null)
                     {
                         string enterpass = CryptGeneration.Decrypt(password);
                         string existingpass = CryptGeneration.Decrypt(Encoding.UTF8.GetString(validpassword.EPasswd));
-                        if(existingpass != enterpass)
+                        if (existingpass != enterpass)
                         {
                             us.IsSucceeded = false;
                             us.Message = string.Format(_localizer[name: "W0002"]);
@@ -73,7 +81,7 @@ namespace eSya.Gateway.DL.Repository
                             return us;
 
                         }
-                        
+
                     }
                     else
                     {
@@ -99,7 +107,7 @@ namespace eSya.Gateway.DL.Repository
 
                                         var waitingHour = (lg.LoginAttemptDate.Value.AddHours((int)unLockLoginAfter) - DateTime.Now);
                                         us.IsSucceeded = false;
-                                        us.Message = string.Format(_localizer[name: "W0006"]) + waitingHour.Hours.ToString() +":"+ waitingHour.Minutes.ToString() + string.Format(_localizer[name: "W0007"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
+                                        us.Message = string.Format(_localizer[name: "W0006"]) + waitingHour.Hours.ToString() + ":" + waitingHour.Minutes.ToString() + string.Format(_localizer[name: "W0007"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
                                         return us;
                                     }
                             }
@@ -109,37 +117,37 @@ namespace eSya.Gateway.DL.Repository
                                 us.Message = string.Format(_localizer[name: "W0009"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
                                 return us;
                             }
-                        //SNO-6
+                            //SNO-6
+                        }
                     }
-                }
                     //SNO-6
                     //if (lg.Password == password)
                     //{
-                      //lg.UnsuccessfulLoginAttempts = 0;
-                        lg.LastActivityDate = DateTime.Now;
+                    //lg.UnsuccessfulLoginAttempts = 0;
+                    lg.LastActivityDate = DateTime.Now;
                     //SNO-6
                     //us.ForcePasswordChangeNextSignIn = lg.ForcePasswordChangeNextSignIn;
                     us.BlockSignIn = lg.BlockSignIn;
 
-                        us.IsSucceeded = true;
-                        us.UserID = lg.UserId;
+                    us.IsSucceeded = true;
+                    us.UserID = lg.UserId;
                     //SNO-6
                     //us.DoctorID = lg.DoctorId;
 
-                        //if (lg.LastPasswordChangeDate.HasValue)
-                        //    us.LastPasswordChangedDay = (DateTime.Now.Date - lg.LastPasswordChangeDate.Value.Date).Days;
+                    //if (lg.LastPasswordChangeDate.HasValue)
+                    //    us.LastPasswordChangedDay = (DateTime.Now.Date - lg.LastPasswordChangeDate.Value.Date).Days;
 
-                        var ub = db.GtEuusbls
-                            .Join(db.GtEcbslns,
-                                u => u.BusinessKey,
-                                b => b.BusinessKey,
-                                (u, b) => new { u, b })
-                            .Where(w => w.u.UserId == lg.UserId);
+                    var ub = db.GtEuusbls
+                        .Join(db.GtEcbslns,
+                            u => u.BusinessKey,
+                            b => b.BusinessKey,
+                            (u, b) => new { u, b })
+                        .Where(w => w.u.UserId == lg.UserId);
 
-                        us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.BusinessName + "-" + x.b.LocationDescription))
-                           .ToDictionary(x => x.Key, x => x.Value);
+                    us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.BusinessName + "-" + x.b.LocationDescription))
+                       .ToDictionary(x => x.Key, x => x.Value);
 
-                        if (ub.Count() > 0)
+                    if (ub.Count() > 0)
                         //SNO-6
                         //us.UserType = ub.FirstOrDefault().u.UserType ?? 0;
 
@@ -150,7 +158,7 @@ namespace eSya.Gateway.DL.Repository
 
                             //.Select(x => (int)x.FinancialYear).Distinct().OrderByDescending(o => o).ToList();
 
-                          
+
 
                             us.l_FinancialYear = db.GtEcblcls
                              .Where(x => x.ActiveStatus) // Filter active records
@@ -165,7 +173,7 @@ namespace eSya.Gateway.DL.Repository
 
                         }
                         else
-                        {  
+                        {
 
                             us.l_FinancialYear = db.GtEcblcls
                                 .Where(x => x.ActiveStatus) // Filter active records
@@ -182,7 +190,7 @@ namespace eSya.Gateway.DL.Repository
                     //SNO-6
                     //}
                     else
-                        {
+                    {
                         us.IsSucceeded = false;
                         us.Message = string.Format(_localizer[name: "W0002"]);
                         //SNO-6
@@ -191,7 +199,7 @@ namespace eSya.Gateway.DL.Repository
                         //lg.UnsuccessfulLoginAttempts += 1;
 
                         //else
-                      
+
                         //lg.UnsuccessfulLoginAttempts = 1;
                         //lg.LoginAttemptDate = DateTime.Now;
                         //SNO-6
@@ -209,7 +217,7 @@ namespace eSya.Gateway.DL.Repository
                 {
                     us.IsSucceeded = false;
                     us.Message = string.Format(_localizer[name: "W0001"]);
-                    us.StatusCode="W0001";
+                    us.StatusCode = "W0001";
 
 
                 }
@@ -225,8 +233,8 @@ namespace eSya.Gateway.DL.Repository
                 DO_UserAccount us = new DO_UserAccount();
                 //SNO-8
                 var lg = await db.GtEuusms
-                    .Where(w => 
-                    //w.MobileNumber == mobileNumber &&
+                    .Where(w =>
+                                //w.MobileNumber == mobileNumber &&
                                 w.ActiveStatus == true)
                     .FirstOrDefaultAsync();
 
@@ -268,8 +276,8 @@ namespace eSya.Gateway.DL.Repository
                 DO_UserAccount us = new DO_UserAccount();
                 //SNO-9
                 var lg = await db.GtEuusms
-                    .Where(w => 
-                    //w.MobileNumber == mobileNumber &&
+                    .Where(w =>
+                                 //w.MobileNumber == mobileNumber &&
 
                                  w.ActiveStatus == true)
                     .FirstOrDefaultAsync();
@@ -433,7 +441,7 @@ namespace eSya.Gateway.DL.Repository
 
                 var lg = await db.GtEuusms
                     .Where(w => w.UserId == userID
-                    //SNO-5
+                                //SNO-5
                                 //&& w.Password == oldpassword
                                 && w.ActiveStatus == true)
                     .FirstOrDefaultAsync();
@@ -448,7 +456,7 @@ namespace eSya.Gateway.DL.Repository
                     {
                         int takeLastChangePassword = passwordRepeatationPolicy;
                         var l_ph = await db.GtEuusphs.Where(w => w.UserId == userID && w.ActiveStatus)
-                            //SNO-5
+                                //SNO-5
                                 //.OrderByDescending(o => o.LastPasswordChanged)
                                 .Take(takeLastChangePassword)
                                 .ToListAsync();
@@ -483,7 +491,7 @@ namespace eSya.Gateway.DL.Repository
                 }
                 else
                 {
-                    return new DO_ReturnParameter { Status = false,StatusCode = "W0013",Message = string.Format(_localizer[name: "W0013"]) }; ;
+                    return new DO_ReturnParameter { Status = false, StatusCode = "W0013", Message = string.Format(_localizer[name: "W0013"]) }; ;
                 }
             }
         }
@@ -506,7 +514,7 @@ namespace eSya.Gateway.DL.Repository
                 //{
                 //    return null;
                 //}
-               return "Abdul Rahiman";
+                return "Abdul Rahiman";
             }
         }
 
@@ -1073,7 +1081,7 @@ namespace eSya.Gateway.DL.Repository
                     .OrderBy(o => o.f.FormIndex)
                     .ToList();
 
-                var fm= fm_m.Where(w=>userForms.Any(f => f.FormId == w.f.FormId))
+                var fm = fm_m.Where(w => userForms.Any(f => f.FormId == w.f.FormId))
                     .OrderBy(o => o.f.FormIndex)
                     .ToList()
                     .Select(f => new DO_FormMenu()
@@ -1117,53 +1125,53 @@ namespace eSya.Gateway.DL.Repository
                     if (us != null)
                     {
 
-                    
-                    var uf = db.GtEuusgrs.Where(w =>
-                    w.UserGroup == us.UserGroup &&
-                    //&& w.UserType == us.UserType &&
-                    w.UserRole == us.UserRole && w.ActiveStatus).
-                   Join(db.GtEuusrls.Where(x => x.ActiveStatus),
-                   h => h.UserRole,
-                   y => y.UserRole,
-                   (h, y) => new { h, y })
-                  .Select(r => new DO_MenuAction
-                  {
-                      MenuKey = r.h.MenuKey,
-                      ActionId = r.y.ActionId
-                  }).ToList();
-                    var distinctMenuKey = uf
-                    .GroupBy(p => new { p.MenuKey, p.ActionId })
-                    .Select(g => g.First())
-                    .ToList();
 
-                    var userForms =  db.GtEcfmfds
-                       .Join(db.GtEcfmnms,
-                           f => f.FormId,
-                           d => d.FormId,
-                           (f, d) => new { f, d })
-                       .Join(db.GtEcmnfls,
-                           fd => fd.f.FormId,
-                           m => m.FormId,
-                           (fd, m) => new { fd, m })
-                       .Where(w => w.fd.d.NavigateUrl == navigationURL)
-                       .Select(x => new
-                       {
-                           x.fd.f.FormId,
-                           x.fd.d.FormIntId,
-                           x.m.FormNameClient,
-                           x.m.MenuKey
-                       }).ToList();
-                    var userFormRoles = userForms.Select(x => new DO_UserFormRole
-                    {
-                        FormID = x.FormId,
-                        FormIntID=x.FormIntId,
-                        FormName = x.FormNameClient,
-                        IsInsert = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 1),
-                        IsEdit = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 2),
-                        IsView = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 3),
-                        IsDelete = uf.Any(w => w.MenuKey == x.MenuKey && (w.ActionId == 4 || w.ActionId == 7)),
-                        IsAuthenticate = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 8)
-                    }).FirstOrDefault();
+                        var uf = db.GtEuusgrs.Where(w =>
+                        w.UserGroup == us.UserGroup &&
+                        //&& w.UserType == us.UserType &&
+                        w.UserRole == us.UserRole && w.ActiveStatus).
+                       Join(db.GtEuusrls.Where(x => x.ActiveStatus),
+                       h => h.UserRole,
+                       y => y.UserRole,
+                       (h, y) => new { h, y })
+                      .Select(r => new DO_MenuAction
+                      {
+                          MenuKey = r.h.MenuKey,
+                          ActionId = r.y.ActionId
+                      }).ToList();
+                        var distinctMenuKey = uf
+                        .GroupBy(p => new { p.MenuKey, p.ActionId })
+                        .Select(g => g.First())
+                        .ToList();
+
+                        var userForms = db.GtEcfmfds
+                           .Join(db.GtEcfmnms,
+                               f => f.FormId,
+                               d => d.FormId,
+                               (f, d) => new { f, d })
+                           .Join(db.GtEcmnfls,
+                               fd => fd.f.FormId,
+                               m => m.FormId,
+                               (fd, m) => new { fd, m })
+                           .Where(w => w.fd.d.NavigateUrl == navigationURL)
+                           .Select(x => new
+                           {
+                               x.fd.f.FormId,
+                               x.fd.d.FormIntId,
+                               x.m.FormNameClient,
+                               x.m.MenuKey
+                           }).ToList();
+                        var userFormRoles = userForms.Select(x => new DO_UserFormRole
+                        {
+                            FormID = x.FormId,
+                            FormIntID = x.FormIntId,
+                            FormName = x.FormNameClient,
+                            IsInsert = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 1),
+                            IsEdit = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 2),
+                            IsView = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 3),
+                            IsDelete = uf.Any(w => w.MenuKey == x.MenuKey && (w.ActionId == 4 || w.ActionId == 7)),
+                            IsAuthenticate = uf.Any(w => w.MenuKey == x.MenuKey && w.ActionId == 8)
+                        }).FirstOrDefault();
 
 
                         //var lr = await db.GtEcfmfds
@@ -1222,7 +1230,7 @@ namespace eSya.Gateway.DL.Repository
             catch (Exception ex)
             {
                 throw ex;
-            } 
+            }
         }
 
 
@@ -1380,6 +1388,79 @@ namespace eSya.Gateway.DL.Repository
             }
         }
 
+        #region Check User is Authenticated
+        public async Task<DO_ReturnParameter> ChkIsUserAuthenticated(string loginId)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var ds = await db.GtEuusms.Where(x => x.LoginId == loginId && x.IsUserAuthenticated && x.ActiveStatus).FirstOrDefaultAsync();
+                    if (ds != null)
+                    {
+                        return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = ds.UserId, Key = ds.LoginDesc };
+                    }
+                    else
+                    {
+                        return new DO_ReturnParameter() { Status = true, StatusCode = "0", Message = string.Format(_localizer[name: "W0018"]) };
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        #endregion
+
+        #region Getting the User Location List
+        public async Task<DO_UserAccount> GetUserLocationsbyUserID(string loginID)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+
+                var lg = await db.GtEuusms
+                    .Where(w => w.LoginId == loginID)
+                    .FirstOrDefaultAsync();
+
+                if (lg != null)
+                {
+                    var ub = db.GtEuusbls
+                        .Join(db.GtEcbslns,
+                            u => u.BusinessKey,
+                            b => b.BusinessKey,
+                            (u, b) => new { u, b })
+                        .Where(w => w.u.UserId == lg.UserId);
+
+                    us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.BusinessName + "-" + x.b.LocationDescription))
+                       .ToDictionary(x => x.Key, x => x.Value);
+
+                    if (ub.Count() > 0)
+
+                        if (ub.Where(w => w.u.AllowMtfy).Count() > 0)
+                        {
+                            us.l_FinancialYear = db.GtEcblcls
+                             .Where(x => x.ActiveStatus) // Filter active records
+                             .Select(x => x.CalenderKey) // Select the CalenderKey
+                             .Where(calenderKey => calenderKey.Length > 2) // Ensure the string has more than 2 characters
+                             .Select(calenderKey => calenderKey.Substring(2)) // Remove the first two characters
+                             .Select(calenderKey => calenderKey.Length > 4 ? calenderKey.Substring(0, 4) : calenderKey) // Truncate after four characters if length > 4
+                             .Distinct()
+                             .OrderByDescending(calenderKey => calenderKey)
+                             .Select(calenderKey => int.Parse(calenderKey)) // Convert to integer
+                             .ToList();
+
+                        }
+                       
+                    return us;
+                }
+                return us;
+            }
+        }
+        #endregion
+
         #region OTP Process
         public async Task<DO_UserAccount> ValidateCreateUserOTP(int userId, string otp)
         {
@@ -1391,14 +1472,14 @@ namespace eSya.Gateway.DL.Repository
                      u => u.UserId,
                      f => f.UserId,
                      (u, f) => new { u, f })
-                 .Where(w => w.u.CreatePasswordInNextSignIn && w.u.UserId==userId && w.u.ActiveStatus && (!w.f.UsageStatus) && w.f.ActiveStatus)
+                 .Where(w => w.u.CreatePasswordInNextSignIn && w.u.UserId == userId && w.u.ActiveStatus && (!w.f.UsageStatus) && w.f.ActiveStatus)
                  .Select(r => new
                  {
                      r.f.Otpnumber,
                      r.u.UserId,
                      r.u.LoginId,
                      r.u.LoginDesc
-                    
+
                  }).FirstOrDefaultAsync();
 
                 if (lg != null)
@@ -1476,7 +1557,7 @@ namespace eSya.Gateway.DL.Repository
                             db.GtEuusphs.Add(passhistory);
                             db.SaveChanges();
                             userexists.CreatePasswordInNextSignIn = false;
-                            userexists.FirstUseByUser =System.DateTime.Now;
+                            userexists.FirstUseByUser = System.DateTime.Now;
                             db.SaveChanges();
 
                             var otppw = db.GtEuuotps.Where(x => x.UserId == userId && x.ActiveStatus).FirstOrDefault();
@@ -1491,7 +1572,7 @@ namespace eSya.Gateway.DL.Repository
                             db.SaveChanges();
 
                             dbContext.Commit();
-                            return new DO_ReturnParameter() { Status = true, StatusCode = "S0003", Message = string.Format(_localizer[name: "S0003"]),ID= userId};
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "S0003", Message = string.Format(_localizer[name: "S0003"]), ID = userId };
 
                         }
                         else
@@ -1536,41 +1617,106 @@ namespace eSya.Gateway.DL.Repository
         #endregion
 
         #region User Security Question
-        public async Task<DO_ReturnParameter> InsertUserSecurityQuestion(DO_UserSecurityQuestions obj)
+        public async Task<DO_ReturnParameter> ChkIsUserQuestionsExists(string loginID)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var lg = await db.GtEuusms
+                    .Where(w => w.LoginId == loginID)
+                    .FirstOrDefaultAsync();
+                    if (lg != null)
+                    {
+                        var ds = await db.GtEuussqs.Where(x => x.UserId == lg.UserId && x.ActiveStatus).FirstOrDefaultAsync();
+                        if (ds != null)
+                        {
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "0", ID = ds.UserId };
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = lg.UserId, Message = string.Format(_localizer[name: "W0020"]) };
+                        }
+                    }
+                    else
+                    {
+                        
+                        return new DO_ReturnParameter() { Status = false,  Message = string.Format(_localizer[name: "W0020"]) };
+
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        public async Task<int> GetNumberofQuestion(int GwRuleId)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+
+                int NoQuestions = 1;
+                var grule = await db.GtEcgwrls
+                    .Where(w => w.GwruleId == GwRuleId && w.ActiveStatus)
+                    .FirstOrDefaultAsync();
+
+                if (grule != null)
+                {
+                    NoQuestions = grule.RuleValue;
+                }
+                return NoQuestions;
+
+
+            }
+        }
+        public async Task<DO_ReturnParameter> InsertUserSecurityQuestion(List<DO_UserSecurityQuestions> obj)
         {
             using (eSyaEnterprise db = new eSyaEnterprise())
             {
                 using (var dbContext = db.Database.BeginTransaction())
-                {            
-                            var QId = db.GtEuussqs.Where(x => x.SecurityQuestionId==obj.SecurityQuestionId && x.UserId==obj.UserId
-                            && x.EffectiveFrom==obj.EffectiveFrom).FirstOrDefault();
-                    if (QId != null)
+                {
+                    foreach (var Q in obj)
                     {
-                        return new DO_ReturnParameter() { Status = false, StatusCode = "W0017", Message = string.Format(_localizer[name: "W0017"]) };
-
-                    }
-                    else
-                    {
-                        var Ques = new GtEuussq
+                        var QId = db.GtEuussqs.Where(x => x.SecurityQuestionId == Q.SecurityQuestionId && x.UserId == Q.UserId
+                            && x.EffectiveFrom == Q.EffectiveFrom).FirstOrDefault();
+                        if (QId != null)
                         {
-                            UserId = obj.UserId,
-                            SecurityQuestionId = obj.SecurityQuestionId,
-                            EffectiveFrom = DateTime.Now,
-                            SecurityAnswer = CryptGeneration.Encrypt(obj.SecurityAnswer),
-                            EffectiveTill = obj.EffectiveTill,
-                            ActiveStatus = true,
-                            FormId = obj.FormID,
-                            CreatedBy = obj.UserId,
-                            CreatedOn = DateTime.Now,
-                            CreatedTerminal = obj.TerminalID
-                        };
-                        db.GtEuussqs.Add(Ques);
-                        await db.SaveChangesAsync();
-                        dbContext.Commit();
-                        return new DO_ReturnParameter() { Status = true, StatusCode = "S0004", Message = string.Format(_localizer[name: "S0004"]) };
+                            QId.SecurityAnswer = CryptGeneration.Encrypt(Q.SecurityAnswer);
+                            QId.EffectiveTill = Q.EffectiveTill;
+                            QId.ActiveStatus = true;
+                            QId.ModifiedBy = Q.UserId;
+                            QId.ModifiedOn = DateTime.Now;
+                            QId.ModifiedTerminal = Q.TerminalID;
+                            await db.SaveChangesAsync();
 
+                        }
+                        else
+                        {
+                            var Ques = new GtEuussq
+                            {
+                                UserId = Q.UserId,
+                                SecurityQuestionId = Q.SecurityQuestionId,
+                                EffectiveFrom = DateTime.Now,
+                                SecurityAnswer = CryptGeneration.Encrypt(Q.SecurityAnswer),
+                                EffectiveTill = Q.EffectiveTill,
+                                ActiveStatus = true,
+                                FormId = Q.FormID,
+                                CreatedBy = Q.UserId,
+                                CreatedOn = DateTime.Now,
+                                CreatedTerminal = Q.TerminalID
+                            };
+                            db.GtEuussqs.Add(Ques);
+                            
+                        }
+                        await db.SaveChangesAsync();
+                        
                     }
-                           
+                    dbContext.Commit();
+                    return new DO_ReturnParameter() { Status = true, StatusCode = "S0004", Message = string.Format(_localizer[name: "S0004"]) };
                 }
             }
         }
@@ -1628,7 +1774,7 @@ namespace eSya.Gateway.DL.Repository
                             }
                             else
                             {
-                                userOtp.Otpnumber= OTP;
+                                userOtp.Otpnumber = OTP;
                                 userOtp.UsageStatus = false;
                                 userOtp.ActiveStatus = true;
                                 userOtp.OtpgeneratedDate = System.DateTime.Now;
@@ -1655,7 +1801,7 @@ namespace eSya.Gateway.DL.Repository
                         dbContext.Rollback();
                         throw ex;
                     }
-                
+
                 }
             }
         }
@@ -1676,7 +1822,7 @@ namespace eSya.Gateway.DL.Repository
                              r.u.UserId,
                              r.u.LoginId,
                              r.u.LoginDesc,
-                             
+
                          }).FirstOrDefaultAsync();
 
                 if (user != null)
@@ -1685,18 +1831,18 @@ namespace eSya.Gateway.DL.Repository
 
                     var userOtp = db.GtEuuotps.Where(x => x.UserId == user.UserId).FirstOrDefault();
 
-                    if (userOtp!=null)
+                    if (userOtp != null)
                     {
                         var expOtp = await db.GtEuuotps
-                       .Where(t =>  t.OtpgeneratedDate >= validTime && (!t.UsageStatus))
+                       .Where(t => t.OtpgeneratedDate >= validTime && (!t.UsageStatus))
                        .FirstOrDefaultAsync();
-                        if(expOtp == null)
+                        if (expOtp == null)
                         {
                             us.IsSucceeded = false;
                             us.Message = "OTP Expired";
                             return us;
                         }
-                        
+
                         if (userOtp.Otpnumber != otp)
                         {
                             us.IsSucceeded = false;
@@ -1718,7 +1864,7 @@ namespace eSya.Gateway.DL.Repository
                         }
 
                     }
-                    
+
                 }
                 else
                 {
@@ -1730,6 +1876,7 @@ namespace eSya.Gateway.DL.Repository
             }
         }
         #endregion
-       
+
     }
 }
+

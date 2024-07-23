@@ -110,6 +110,16 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _userAccountRepository.GetUserBusinessLocation(userID);
             return Ok(ds);
         }
+
+        #region Check User is Authenticated
+        [HttpGet]
+        public async Task<IActionResult> ChkIsUserAuthenticated(string loginId)
+        {
+            var ds = await _userAccountRepository.ChkIsUserAuthenticated(loginId);
+            return Ok(ds);
+        }
+        #endregion
+
         #region OTP Process
         [HttpGet]
         public async Task<IActionResult> ValidateCreateUserOTP(int userId, string otp)
@@ -136,8 +146,21 @@ namespace eSya.Gateway.WebAPI.Controllers
         #endregion
 
         #region User Security Question
+        [HttpGet]
+        public async Task<IActionResult> ChkIsUserQuestionsExists(string loginID)
+        {
+            var ds = await _userAccountRepository.ChkIsUserQuestionsExists(loginID);
+            return Ok(ds);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetNumberofQuestion(int GwRuleId)
+        {
+            var ds = await _userAccountRepository.GetNumberofQuestion(GwRuleId);
+            return Ok(ds);
+        }
+       
         [HttpPost]
-        public async Task<IActionResult> InsertUserSecurityQuestion(DO_UserSecurityQuestions obj)
+        public async Task<IActionResult> InsertUserSecurityQuestion(List<DO_UserSecurityQuestions> obj)
         {
             var ds = await _userAccountRepository.InsertUserSecurityQuestion(obj);
             return Ok(ds);
