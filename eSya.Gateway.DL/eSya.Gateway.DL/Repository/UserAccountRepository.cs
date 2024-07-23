@@ -1628,21 +1628,34 @@ namespace eSya.Gateway.DL.Repository
                     .FirstOrDefaultAsync();
                     if (lg != null)
                     {
-                        var ds = await db.GtEuussqs.Where(x => x.UserId == lg.UserId && x.ActiveStatus).FirstOrDefaultAsync();
-                        if (ds != null)
+                        var otp = db.GtEuuotps.Where(x => x.UserId == lg.UserId).FirstOrDefault();
+                        var pass = db.GtEuuspws.Where(x => x.UserId == lg.UserId).FirstOrDefault();
+                        if(otp!=null && pass != null )
                         {
-                            return new DO_ReturnParameter() { Status = true, StatusCode = "0", ID = ds.UserId };
+                            var ds = await db.GtEuussqs.Where(x => x.UserId == lg.UserId && x.ActiveStatus).FirstOrDefaultAsync();
+                            if (ds != null)
+                            {
+                                return new DO_ReturnParameter() { Status = true, StatusCode = "0", ID = ds.UserId };
+
+                            }
+                            else
+                            {
+                                return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = lg.UserId, Message = string.Format(_localizer[name: "W0020"]) };
+                            }
 
                         }
                         else
                         {
-                            return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = lg.UserId, Message = string.Format(_localizer[name: "W0020"]) };
+
+                            return new DO_ReturnParameter() { Status = true , ID = lg.UserId, };
+
                         }
+
                     }
                     else
                     {
                         
-                        return new DO_ReturnParameter() { Status = false,  Message = string.Format(_localizer[name: "W0020"]) };
+                        return new DO_ReturnParameter() { Status = false };
 
                     }
 
