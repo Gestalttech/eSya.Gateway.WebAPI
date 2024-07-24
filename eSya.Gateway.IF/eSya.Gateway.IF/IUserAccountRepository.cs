@@ -29,6 +29,10 @@ namespace eSya.Gateway.IF
         Task<DO_ReturnParameter> ChkIsUserAuthenticated(string loginId);
         #endregion
 
+        #region Getting the User Location List
+        Task<DO_UserFinBusinessLocation> GetUserLocationsbyUserID(string loginID);
+        #endregion
+
         #region OTP Process
         Task<DO_UserAccount> ValidateCreateUserOTP(int userId, string otp);
         #endregion

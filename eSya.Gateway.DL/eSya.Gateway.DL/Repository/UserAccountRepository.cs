@@ -1415,11 +1415,11 @@ namespace eSya.Gateway.DL.Repository
         #endregion
 
         #region Getting the User Location List
-        public async Task<DO_UserAccount> GetUserLocationsbyUserID(string loginID)
+        public async Task <DO_UserFinBusinessLocation> GetUserLocationsbyUserID(string loginID)
         {
             using (var db = new eSyaEnterprise())
             {
-                DO_UserAccount us = new DO_UserAccount();
+                DO_UserFinBusinessLocation us = new DO_UserFinBusinessLocation();
 
                 var lg = await db.GtEuusms
                     .Where(w => w.LoginId == loginID)
@@ -1434,14 +1434,17 @@ namespace eSya.Gateway.DL.Repository
                             (u, b) => new { u, b })
                         .Where(w => w.u.UserId == lg.UserId);
 
-                    us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.BusinessName + "-" + x.b.LocationDescription))
-                       .ToDictionary(x => x.Key, x => x.Value);
+                    us.lstUserLocation = ub.Select(x => new DO_UserFinBusinessLocation()
+                    {
+                        BusinessKey=x.u.BusinessKey,
+                        BusinessLocation=x.b.BusinessName+"-"+x.b.LocationDescription
+                    }).GroupBy(x => new { x.BusinessKey }).Select(g => g.First()).ToList();
 
                     if (ub.Count() > 0)
 
                         if (ub.Where(w => w.u.AllowMtfy).Count() > 0)
                         {
-                            us.l_FinancialYear = db.GtEcblcls
+                            us.lstFinancialYear = db.GtEcblcls
                              .Where(x => x.ActiveStatus) // Filter active records
                              .Select(x => x.CalenderKey) // Select the CalenderKey
                              .Where(calenderKey => calenderKey.Length > 2) // Ensure the string has more than 2 characters
@@ -1452,6 +1455,10 @@ namespace eSya.Gateway.DL.Repository
                              .Select(calenderKey => int.Parse(calenderKey)) // Convert to integer
                              .ToList();
 
+                        }
+                        else
+                        {
+                            us.lstFinancialYear = new List<int> {System.DateTime.Now.Year };
                         }
                        
                     return us;
