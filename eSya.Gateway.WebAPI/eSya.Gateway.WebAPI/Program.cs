@@ -57,6 +57,8 @@ builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
 builder.Services.AddScoped<ISmsStatementRepository, SmsStatementRepository>();
 builder.Services.AddScoped<ISmsSender, SmsSender>();
 builder.Services.AddScoped<ISmsReminderRepository, SmsReminderRepository>();
+builder.Services.AddScoped<IForgotUserPasswordRepository, ForgotUserPasswordRepository>();
+
 builder.Services.AddScoped<IRazorpayPaymentApi, RazorpayPaymentApi>();
 
 builder.Services.AddSingleton<IStringLocalizerFactory, JsonStringLocalizerFactory>();

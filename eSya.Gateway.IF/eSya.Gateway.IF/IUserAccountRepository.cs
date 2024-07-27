@@ -41,15 +41,13 @@ namespace eSya.Gateway.IF
         Task<DO_ReturnParameter> CreateUserPasswordINNextSignIn(int userId, string password);
         Task<DO_ReturnParameter> ChkIsCreatePasswordInNextSignIn(string loginId);
         #endregion
+
         #region User Security Question
         Task<DO_ReturnParameter> ChkIsUserQuestionsExists(string loginID);
         Task<int> GetNumberofQuestion(int GwRuleId);
         Task<DO_ReturnParameter> InsertUserSecurityQuestion(List<DO_UserSecurityQuestions> obj);
         #endregion
 
-        #region Get User ID
-        Task<DO_UserAccount> GetOTPbyMobileNumber(string mobileNo);
-        Task<DO_UserAccount> ValidateUserbyOTP(String mobileNo, string otp, int expirytime);
-        #endregion
+        
     }
 }
