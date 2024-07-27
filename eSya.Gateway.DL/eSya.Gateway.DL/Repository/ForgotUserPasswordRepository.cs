@@ -422,7 +422,7 @@ namespace eSya.Gateway.DL.Repository
                     else
                     {
                         us.IsSucceeded = false;
-                        us.Message = "You Entered Wrong Answer Or Password not Created";
+                        us.Message = "You Entered Wrong Answer";
                         us.UserID = user.UserId;
                     }
 
