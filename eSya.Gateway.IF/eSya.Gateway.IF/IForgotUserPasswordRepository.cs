@@ -15,5 +15,10 @@ namespace eSya.Gateway.IF
         Task<DO_UserSecurityQuestions> GetRandomSecurityQuestion(string mobileNo);
         Task<DO_UserAccount> ValidateUserSecurityQuestion(DO_UserSecurityQuestions obj);
         #endregion
+
+        #region Forgot Password 
+        Task<DO_UserAccount> ValidateForgotPasswordOTP(string mobileNo, string otp, int expirytime);
+        Task<DO_UserAccount> ValidateForgotPasswordSecurityQuestion(DO_UserSecurityQuestions obj);
+        #endregion
     }
 }

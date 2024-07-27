@@ -21,7 +21,7 @@ namespace eSya.Gateway.DL.Repository
             _localizer = localizer;
         }
 
-        #region ForGot User ID
+        #region Forgot User ID
         public async Task<DO_UserAccount> GetOTPbyMobileNumber(string mobileNo)
         {
             using (var db = new eSyaEnterprise())
@@ -293,6 +293,147 @@ namespace eSya.Gateway.DL.Repository
                     us.UserID = obj.UserId;
                 }
                        
+                return us;
+            }
+        }
+        #endregion
+
+        #region Forgot Password 
+        
+        public async Task<DO_UserAccount> ValidateForgotPasswordOTP(string mobileNo, string otp, int expirytime)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+
+                var user = await db.GtEuusbls.Join(db.GtEuusms,
+                            b => b.UserId,
+                            u => u.UserId,
+                            (b, u) => new { b, u })
+                           .Join(db.GtEuuspws,
+                            bu=>bu.u.UserId,
+                            p=>p.UserId,
+                           (bu,p)=>new {bu,p })
+                        .Where(w => w.bu.b.MobileNumber.ToUpper().Replace(" ", "") == mobileNo.ToUpper().Replace(" ", "") && w.bu.b.ActiveStatus && w.bu.u.ActiveStatus && w.p.ActiveStatus)
+                         .Select(r => new
+                         {
+                             r.bu.b.MobileNumber,
+                             r.bu.u.UserId,
+                             r.bu.u.LoginId,
+                             r.bu.u.LoginDesc,
+                             r.p.EPasswd,
+
+                         }).FirstOrDefaultAsync();
+
+                if (user != null)
+                {
+                    var validTime = DateTime.Now.AddMinutes(-expirytime);
+
+                    var userOtp = db.GtEuuotps.Where(x => x.UserId == user.UserId).FirstOrDefault();
+
+                    if (userOtp != null)
+                    {
+                        var expOtp = await db.GtEuuotps
+                       .Where(t => t.OtpgeneratedDate >= validTime && (!t.UsageStatus) && t.ActiveStatus)
+                       .FirstOrDefaultAsync();
+                        if (expOtp == null)
+                        {
+                            us.SecurityQuestionId = 0;
+                            us.IsSucceeded = false;
+                            us.Message = "OTP Expired";
+                            return us;
+                        }
+
+                        if (userOtp.Otpnumber != otp)
+                        {
+                            us.SecurityQuestionId = 0;
+                            us.IsSucceeded = false;
+                            us.Message = "In Valid OTP";
+                            return us;
+                        }
+                        if (userOtp.Otpnumber == otp)
+                        {
+                            us.SecurityQuestionId = 0;
+                            us.IsSucceeded = true;
+                            us.Message = "Your OTP has Sucessfully Validated";
+                            us.LoginID = user.LoginId;
+                            us.UserID = user.UserId;
+                            us.LoginDesc = user.LoginDesc;
+                            us.Password = CryptGeneration.Decrypt(Encoding.UTF8.GetString(user.EPasswd)); 
+                            userOtp.UsageStatus = true;
+                            userOtp.ActiveStatus = false;
+                            userOtp.ModifiedOn = System.DateTime.Now;
+                            db.SaveChanges();
+
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    us.SecurityQuestionId = 0;
+                    us.IsSucceeded = false;
+                    us.Message = "Mobile Number Not Exist Or Password Not Created";
+                }
+
+                return us;
+            }
+        }
+      
+        public async Task<DO_UserAccount> ValidateForgotPasswordSecurityQuestion(DO_UserSecurityQuestions obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+
+                var validAns = await db.GtEuussqs.Where(x => x.UserId == obj.UserId && x.SecurityQuestionId == obj.SecurityQuestionId && x.ActiveStatus).FirstOrDefaultAsync();
+                string answer = "";
+                bool validQuestion = false;
+                if (validAns != null)
+                {
+                    answer = CryptGeneration.Decrypt(validAns.SecurityAnswer);
+                    validQuestion = answer.ToUpper().Replace(" ", "") == obj.SecurityAnswer.ToUpper().Replace(" ", "");
+                }
+
+                if (validQuestion)
+                {
+                    var user = await db.GtEuusms.Join(db.GtEuuspws,
+                            b => b.UserId,
+                            u => u.UserId,
+                            (b, u) => new { b, u })
+                        .Where(x => x.b.ActiveStatus && x.b.UserId == obj.UserId && x.u.UserId==obj.UserId && x.u.ActiveStatus)
+                     .Select(r => new
+                     {
+                         r.b.UserId,
+                         r.b.LoginId,
+                         r.b.LoginDesc,
+                         r.u.EPasswd
+                     }).FirstOrDefaultAsync();
+                    if (user != null)
+                    {
+                        us.IsSucceeded = true;
+                        us.Message = "Sequrity Question Validated";
+                        us.UserID = user.UserId;
+                        us.LoginID = user.LoginId;
+                        us.LoginDesc = user.LoginDesc;
+                        us.Password = CryptGeneration.Decrypt(Encoding.UTF8.GetString(user.EPasswd));
+                    }
+                    else
+                    {
+                        us.IsSucceeded = false;
+                        us.Message = "You Entered Wrong Answer Or Password not Created";
+                        us.UserID = user.UserId;
+                    }
+
+                }
+                else
+                {
+                    us.IsSucceeded = false;
+                    us.Message = "You Entered Wrong Answer";
+                    us.UserID = obj.UserId;
+                }
+
                 return us;
             }
         }

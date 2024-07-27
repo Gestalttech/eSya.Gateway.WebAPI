@@ -43,5 +43,20 @@ namespace eSya.Gateway.WebAPI.Controllers
             return Ok(msg);
         }
         #endregion
+
+        #region Forgot Password 
+        [HttpGet]
+        public async Task<IActionResult> ValidateForgotPasswordOTP(string mobileNo, string otp, int expirytime)
+        {
+            var ds = await _forgotUserPasswordRepository.ValidateForgotPasswordOTP(mobileNo, otp, expirytime);
+            return Ok(ds);
+        }
+        [HttpGet]
+        public async Task<IActionResult> ValidateForgotPasswordSecurityQuestion(DO_UserSecurityQuestions obj)
+        {
+            var ds = await _forgotUserPasswordRepository.ValidateForgotPasswordSecurityQuestion(obj);
+            return Ok(ds);
+        }
+        #endregion
     }
 }
