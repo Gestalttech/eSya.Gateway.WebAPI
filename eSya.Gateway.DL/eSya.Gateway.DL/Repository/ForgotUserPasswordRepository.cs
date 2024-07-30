@@ -59,6 +59,7 @@ namespace eSya.Gateway.DL.Repository
                                 {
                                     UserId = user.UserId,
                                     Otpnumber = OTP,
+                                    Otpsource="SMS OTP",
                                     OtpgeneratedDate = System.DateTime.Now,
                                     UsageStatus = false,
                                     ActiveStatus = true,
@@ -74,6 +75,7 @@ namespace eSya.Gateway.DL.Repository
                             else
                             {
                                 userOtp.Otpnumber = OTP;
+                                userOtp.Otpsource = "SMS OTP";
                                 userOtp.UsageStatus = false;
                                 userOtp.ActiveStatus = true;
                                 userOtp.OtpgeneratedDate = System.DateTime.Now;
@@ -439,5 +441,49 @@ namespace eSya.Gateway.DL.Repository
         }
         #endregion
 
+        #region Get Password Expiration
+        public async Task<DO_ReturnParameter> GetPasswordExpirationDays(string loginId)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var ds = await db.GtEuusms.Where(x => x.LoginId.ToUpper().Replace(" ", "") == loginId.ToUpper().Replace(" ", "") && x.IsUserAuthenticated && x.ActiveStatus
+                    && (!x.BlockSignIn) &&(!x.CreatePasswordInNextSignIn)).FirstOrDefaultAsync();
+                    var exp = await db.GtEcgwrls.Where(w => w.GwruleId == 1 && w.ActiveStatus)
+                                  .FirstOrDefaultAsync();
+                    if (ds != null && ds.LastPasswordUpdatedDate != null && exp!=null)
+                    {
+                      
+                            DateTime lastPasswordUpdatedDate = ds.LastPasswordUpdatedDate.Value;
+                            DateTime currentDate = DateTime.Now.AddDays(1);
+                            TimeSpan difference = currentDate - lastPasswordUpdatedDate;
+                            int days = difference.Days;
+                        int numberOfDays = exp.RuleValue - days;
+
+                        if (numberOfDays < 11)
+                        {
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "1", Message = "Your Password will Expire in next " + numberOfDays + " days Kindly Reset before Expires", ID = numberOfDays };
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "0", Message = "No Password Expiration Rule" };
+
+                        }
+
+                    }
+                    else
+                    {
+                        return new DO_ReturnParameter() { Status = true, StatusCode = "0", Message = "No Password Expiration Rule" };
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        #endregion
     }
 }

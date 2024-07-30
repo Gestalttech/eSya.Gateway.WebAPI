@@ -20,5 +20,9 @@ namespace eSya.Gateway.IF
         Task<DO_UserAccount> ValidateForgotPasswordOTP(string mobileNo, string otp, int expirytime);
         Task<DO_UserAccount> ValidateForgotPasswordSecurityQuestion(DO_UserSecurityQuestions obj);
         #endregion
+
+        #region Get Password Expiration
+        Task<DO_ReturnParameter>  GetPasswordExpirationDays(string loginId);
+        #endregion
     }
 }

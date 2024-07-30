@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Http;
 using System.Collections;
 using static System.Net.WebRequestMethods;
 using Microsoft.Data.SqlClient.Server;
+using System.Data;
+using System.Diagnostics;
 
 namespace eSya.Gateway.DL.Repository
 {
@@ -68,6 +70,37 @@ namespace eSya.Gateway.DL.Repository
                         us.StatusCode = "W0018";
                         return us;
                     }
+
+                    var ds = await db.GtEuusms.Where(x => x.LoginId.ToUpper().Replace(" ", "") == loginID.ToUpper().Replace(" ", "") && x.IsUserAuthenticated && x.ActiveStatus
+                   && (!x.BlockSignIn) && (!x.CreatePasswordInNextSignIn)).FirstOrDefaultAsync();
+                    var exp = await db.GtEcgwrls.Where(w => w.GwruleId == 1 && w.ActiveStatus)
+                                  .FirstOrDefaultAsync();
+                    var pr = db.GtEcprrls
+                       .Join(db.GtEcaprls,
+                           p => p.ProcessId,
+                           r => r.ProcessId,
+                    (p, r) => new { p, r })
+                    .Where(w => w.p.ProcessId == 4 && w.r.RuleId ==3
+                           && w.p.ActiveStatus && w.r.ActiveStatus)
+                      .Count();
+
+                    if (ds != null && ds.LastPasswordUpdatedDate != null && exp != null && pr>0)
+                    {
+                        DateTime lastPasswordUpdatedDate = ds.LastPasswordUpdatedDate.Value;
+                        DateTime currentDate = DateTime.Now.AddDays(1);
+                        TimeSpan difference = currentDate - lastPasswordUpdatedDate;
+                        int days = difference.Days;
+                        int numberOfDays = exp.RuleValue - days;
+                        if (numberOfDays <= 0)
+                        {
+                            us.IsSucceeded = false;
+                            us.Message = string.Format(_localizer[name: "W0021"]);
+                            us.StatusCode = "W0021";
+                            return us;
+
+                        }
+                    }
+
                     var validpassword = db.GtEuuspws.Where(x => x.UserId == lg.UserId && x.ActiveStatus).FirstOrDefault();
                     if (validpassword != null)
                     {
@@ -1565,6 +1598,9 @@ namespace eSya.Gateway.DL.Repository
                             db.SaveChanges();
                             userexists.CreatePasswordInNextSignIn = false;
                             userexists.FirstUseByUser = System.DateTime.Now;
+                            userexists.LastPasswordUpdatedDate = System.DateTime.Now;
+                            userexists.LastActivityDate = System.DateTime.Now;
+
                             db.SaveChanges();
 
                             var otppw = db.GtEuuotps.Where(x => x.UserId == userId && x.ActiveStatus).FirstOrDefault();

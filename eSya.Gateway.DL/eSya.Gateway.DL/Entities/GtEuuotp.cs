@@ -8,6 +8,7 @@ namespace eSya.Gateway.DL.Entities
         public int UserId { get; set; }
         public string Otpnumber { get; set; } = null!;
         public DateTime OtpgeneratedDate { get; set; }
+        public string Otpsource { get; set; } = null!;
         public bool UsageStatus { get; set; }
         public bool ActiveStatus { get; set; }
         public string FormId { get; set; } = null!;

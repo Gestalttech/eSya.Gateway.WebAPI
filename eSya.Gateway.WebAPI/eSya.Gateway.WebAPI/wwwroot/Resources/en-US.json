@@ -20,6 +20,7 @@
   "W0018": "User is Not Authenticated",
   "W0019": "User Security Questions has not Selected",
   "W0020": "User ID Not Exist",
+  "W0021": "Your Password has been Expired",
   "S0001": "Saved Sucessfully",
   "S0002": "Updated Sucessfully",
   "S0003": "Password has been created sucessfully",
