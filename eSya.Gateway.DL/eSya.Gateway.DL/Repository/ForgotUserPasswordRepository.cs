@@ -441,7 +441,7 @@ namespace eSya.Gateway.DL.Repository
         }
         #endregion
 
-        #region Get Password Expiration
+        #region Change Password Expiration Password
         public async Task<DO_ReturnParameter> GetPasswordExpirationDays(string loginId)
         {
             try
@@ -449,21 +449,21 @@ namespace eSya.Gateway.DL.Repository
                 using (var db = new eSyaEnterprise())
                 {
                     var ds = await db.GtEuusms.Where(x => x.LoginId.ToUpper().Replace(" ", "") == loginId.ToUpper().Replace(" ", "") && x.IsUserAuthenticated && x.ActiveStatus
-                    && (!x.BlockSignIn) &&(!x.CreatePasswordInNextSignIn)).FirstOrDefaultAsync();
+                    && (!x.BlockSignIn) && (!x.CreatePasswordInNextSignIn)).FirstOrDefaultAsync();
                     var exp = await db.GtEcgwrls.Where(w => w.GwruleId == 1 && w.ActiveStatus)
                                   .FirstOrDefaultAsync();
-                    if (ds != null && ds.LastPasswordUpdatedDate != null && exp!=null)
+                    if (ds != null && ds.LastPasswordUpdatedDate != null && exp != null)
                     {
-                      
-                            DateTime lastPasswordUpdatedDate = ds.LastPasswordUpdatedDate.Value;
-                            DateTime currentDate = DateTime.Now.AddDays(1);
-                            TimeSpan difference = currentDate - lastPasswordUpdatedDate;
-                            int days = difference.Days;
+
+                        DateTime lastPasswordUpdatedDate = ds.LastPasswordUpdatedDate.Value;
+                        DateTime currentDate = DateTime.Now.AddDays(1);
+                        TimeSpan difference = currentDate - lastPasswordUpdatedDate;
+                        int days = difference.Days;
                         int numberOfDays = exp.RuleValue - days;
 
                         if (numberOfDays < 11)
                         {
-                            return new DO_ReturnParameter() { Status = true, StatusCode = "1", Message = "Your Password will Expire in next " + numberOfDays + " days Kindly Reset before Expires", ID = numberOfDays };
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "1", Message = "Your Password will Expire in next " + numberOfDays + " days Kindly Reset before Expires", ID = numberOfDays, Key = ds.UserId.ToString() };
                         }
                         else
                         {
@@ -482,6 +482,169 @@ namespace eSya.Gateway.DL.Repository
             catch (Exception ex)
             {
                 throw ex;
+            }
+        }
+        public async Task<DO_ReturnParameter> ChangeUserExpirationPassword(DO_ChangeExpirationPassword obj)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+
+                        var user = await db.GtEuusms
+                            .Join(db.GtEuuspws,
+                                u => new { u.UserId },
+                                up => new { up.UserId },
+                                (u, up) => new { u, up }).Where(x => x.u.UserId == obj.userID && x.u.ActiveStatus && x.up.UserId == obj.userID)
+                                .Select(m => new DO_UserPassword
+                                {
+                                    UserID = m.u.UserId,
+                                    EPasswd = m.up.EPasswd
+                                }).FirstOrDefaultAsync();
+
+
+                        if (user != null)
+                        {
+                            string existingpassword = string.Empty;
+                            string olduserpassword = string.Empty;
+                            if (user.EPasswd.Length != 0)
+                            {
+                                existingpassword = CryptGeneration.Decrypt(Encoding.UTF8.GetString(user.EPasswd));
+
+                                //existingpassword = CryptGeneration.Decrypt(Convert.ToBase64String(user.EPasswd));
+
+
+                                Byte[] oldpasswordbitmapData = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(obj.oldpassword));
+                                olduserpassword = CryptGeneration.Decrypt(Encoding.UTF8.GetString(oldpasswordbitmapData));
+
+                                if (existingpassword != olduserpassword)
+                                {
+                                    return new DO_ReturnParameter() { Status = false, StatusCode = "W0022", Message = string.Format(_localizer[name: "W0022"]) };
+                                }
+
+                                else
+                                {
+                                    var usermaster = db.GtEuusms.Where(x => x.UserId == obj.userID).FirstOrDefault();
+                                    var passwordmaster = db.GtEuuspws.Where(x => x.UserId == obj.userID).FirstOrDefault();
+
+                                  
+                                    var repeat = await db.GtEcgwrls.Where(w => w.GwruleId == 2 && w.ActiveStatus)
+                                  .FirstOrDefaultAsync();
+                                    var pr = db.GtEcprrls
+                                     .Join(db.GtEcaprls,
+                                     p => p.ProcessId,
+                                     r => r.ProcessId,
+                                     (p, r) => new { p, r })
+                                    .Where(w => w.p.ProcessId == 4 && w.r.RuleId == 4
+                                     && w.p.ActiveStatus && w.r.ActiveStatus)
+                                    .Count();
+
+                                    if(repeat!=null && pr > 0)
+                                    {
+                                      
+                                        var pass_history = db.GtEuusphs
+                                       .Where(x => x.UserId == obj.userID)
+                                       .OrderByDescending(x => x.SerialNumber)
+                                        .Take(repeat.RuleValue)
+                                         .Select(x => new DO_ChangeExpirationPassword
+                                         {
+                                            newPassword = CryptGeneration.Decrypt(Encoding.UTF8.GetString(x.EPasswd))
+                                          })
+                                           .ToList();   
+
+                                        if (pass_history != null)
+                                        {
+                                            foreach (var p in pass_history)
+                                            {
+                                                if (p.newPassword == obj.newPassword)
+                                                {
+                                                    return new DO_ReturnParameter() { Status = false, StatusCode = "W0025", Message = string.Format(_localizer[name: "W0025"]) };
+                                                }
+                                            }
+                                        }
+
+                                    }
+
+                                  
+
+                                    if (usermaster != null && passwordmaster != null)
+                                    {
+                                        usermaster.LastPasswordUpdatedDate = DateTime.Now;
+                                        usermaster.LastActivityDate = System.DateTime.Now;
+                                        await db.SaveChangesAsync();
+                                    }
+
+
+
+                                    passwordmaster.EPasswd = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(obj.newPassword));
+                                    passwordmaster.LastPasswdDate = DateTime.Now;
+                                    await db.SaveChangesAsync();
+                                    var serialno = db.GtEuusphs.Select(x => x.SerialNumber).DefaultIfEmpty().Max() + 1;
+                                    var passhistory = new GtEuusph
+                                    {
+                                        UserId = obj.userID,
+                                        SerialNumber = serialno,
+                                        EPasswd = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(obj.newPassword)),
+                                        LastPasswdChangedDate = DateTime.Now,
+                                        ActiveStatus = true,
+                                        FormId = obj.FormID,
+                                        CreatedBy = obj.CreatedBy,
+                                        CreatedOn = DateTime.Now,
+                                        CreatedTerminal = obj.TerminalID
+                                    };
+                                    db.GtEuusphs.Add(passhistory);
+                                    await db.SaveChangesAsync();
+                                    dbContext.Commit();
+                                    return new DO_ReturnParameter() { Status = true, StatusCode = "S0010", Message = string.Format(_localizer[name: "S0010"]) };
+
+                                }
+                            }
+                            else
+                            {
+                                return new DO_ReturnParameter() { Status = false, StatusCode = "W0023", Message = string.Format(_localizer[name: "W0023"]) };
+
+                            }
+
+
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, StatusCode = "W0024", Message = string.Format(_localizer[name: "W0024"]) };
+
+
+                        }
+                    }
+                    
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        return new DO_ReturnParameter() { Status = false, Message = ex.Message };
+                    }
+                }
+
+            }
+        }
+
+        public async Task<int> GetGatewayRuleValuebyRuleID(int GwRuleId)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+                int rval = 0;
+                var ruleval = await db.GtEcgwrls
+                    .Where(w => w.GwruleId == GwRuleId && w.ActiveStatus)
+                    .FirstOrDefaultAsync();
+
+                if (ruleval != null)
+                {
+                    rval = ruleval.RuleValue;
+                }
+                return rval;
+
+
             }
         }
         #endregion

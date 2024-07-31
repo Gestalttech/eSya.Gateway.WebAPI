@@ -59,11 +59,23 @@ namespace eSya.Gateway.WebAPI.Controllers
         }
         #endregion
 
-        #region Get Password Expiration
+        #region Change Password Expiration Password
         [HttpGet]
         public async Task<IActionResult> GetPasswordExpirationDays(string loginId)
         {
             var ds = await _forgotUserPasswordRepository.GetPasswordExpirationDays(loginId);
+            return Ok(ds);
+        }
+        [HttpPost]
+        public async Task<IActionResult> ChangeUserExpirationPassword(DO_ChangeExpirationPassword obj)
+        {
+            var ds = await _forgotUserPasswordRepository.ChangeUserExpirationPassword(obj);
+            return Ok(ds);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetGatewayRuleValuebyRuleID(int GwRuleId)
+        {
+            var ds = await _forgotUserPasswordRepository.GetGatewayRuleValuebyRuleID(GwRuleId);
             return Ok(ds);
         }
         #endregion

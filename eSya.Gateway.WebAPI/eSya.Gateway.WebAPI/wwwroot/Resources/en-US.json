@@ -21,8 +21,14 @@
   "W0019": "User Security Questions has not Selected",
   "W0020": "User ID Not Exist",
   "W0021": "Your Password has been Expired",
+  "W0022": "Invalid Old Password",
+  "W0023": "Not Exist",
+  "W0024": "User Not Exist",
+  "W0025": "This Password is already Used in Past",
+
   "S0001": "Saved Sucessfully",
   "S0002": "Updated Sucessfully",
   "S0003": "Password has been created sucessfully",
-  "S0004": "Security Question has been created sucessfully"
+  "S0004": "Security Question has been created sucessfully",
+  "S0010": "Password has been Changed Sucessfully"
 }
