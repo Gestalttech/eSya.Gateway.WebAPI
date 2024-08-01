@@ -210,7 +210,7 @@ namespace eSya.Gateway.DL.Repository
                     lg.UnsuccessfulAttempt = 0;
                     lg.LastActivityDate = DateTime.Now;
                     lg.LoginAttemptDate = DateTime.Now;
-                    us.BlockSignIn = false;
+                    lg.BlockSignIn = false;
                     us.IsSucceeded = true;
                     us.UserID = lg.UserId;
                     //SNO-6
