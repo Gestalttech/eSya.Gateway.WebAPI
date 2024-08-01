@@ -42,8 +42,8 @@ namespace eSya.Gateway.DL.Repository
                 {
                     if (!lg.ActiveStatus)
                     {
-                        //return new DO_UserAccount() { IsSucceeded = false, StatusCode = "W0002", Message = string.Format(_localizer[name: "W0002"]) };
-
+                        lg.LoginAttemptDate = DateTime.Now;
+                        lg.LastActivityDate = DateTime.Now;
                         us.IsSucceeded = false;
                         us.Message = string.Format(_localizer[name: "W0004"]);
                         us.StatusCode = "W0004";
@@ -51,6 +51,8 @@ namespace eSya.Gateway.DL.Repository
                     }
                     if (lg.BlockSignIn)
                     {
+                        lg.LoginAttemptDate = DateTime.Now;
+                        lg.LastActivityDate = DateTime.Now;
                         us.IsSucceeded = false;
                         us.Message = string.Format(_localizer[name: "W0005"]);
                         us.StatusCode = "W0005";
@@ -58,6 +60,8 @@ namespace eSya.Gateway.DL.Repository
                     }
                     if (lg.CreatePasswordInNextSignIn)
                     {
+                        lg.LoginAttemptDate = DateTime.Now;
+                        lg.LastActivityDate = DateTime.Now;
                         us.IsSucceeded = false;
                         us.Message = string.Format(_localizer[name: "W0016"]);
                         us.StatusCode = "W0016";
@@ -65,14 +69,16 @@ namespace eSya.Gateway.DL.Repository
                     }
                     if (!lg.IsUserAuthenticated)
                     {
+                        lg.LoginAttemptDate = DateTime.Now;
+                        lg.LastActivityDate = DateTime.Now;
                         us.IsSucceeded = false;
                         us.Message = string.Format(_localizer[name: "W0018"]);
                         us.StatusCode = "W0018";
                         return us;
                     }
 
-                    var ds = await db.GtEuusms.Where(x => x.LoginId.ToUpper().Replace(" ", "") == loginID.ToUpper().Replace(" ", "") && x.IsUserAuthenticated && x.ActiveStatus
-                   && (!x.BlockSignIn) && (!x.CreatePasswordInNextSignIn)).FirstOrDefaultAsync();
+                   // var ds = await db.GtEuusms.Where(x => x.LoginId.ToUpper().Replace(" ", "") == loginID.ToUpper().Replace(" ", "") && x.IsUserAuthenticated && x.ActiveStatus
+                   //&& (!x.BlockSignIn) && (!x.CreatePasswordInNextSignIn)).FirstOrDefaultAsync();
                     var exp = await db.GtEcgwrls.Where(w => w.GwruleId == 1 && w.ActiveStatus)
                                   .FirstOrDefaultAsync();
                     var pr = db.GtEcprrls
@@ -84,15 +90,17 @@ namespace eSya.Gateway.DL.Repository
                            && w.p.ActiveStatus && w.r.ActiveStatus)
                       .Count();
 
-                    if (ds != null && ds.LastPasswordUpdatedDate != null && exp != null && pr>0)
+                    if (lg != null && lg.LastPasswordUpdatedDate != null && exp != null && pr>0)
                     {
-                        DateTime lastPasswordUpdatedDate = ds.LastPasswordUpdatedDate.Value;
+                        DateTime lastPasswordUpdatedDate = lg.LastPasswordUpdatedDate.Value;
                         DateTime currentDate = DateTime.Now.AddDays(1);
                         TimeSpan difference = currentDate - lastPasswordUpdatedDate;
                         int days = difference.Days;
                         int numberOfDays = exp.RuleValue - days;
                         if (numberOfDays <= 0)
                         {
+                            lg.LoginAttemptDate = DateTime.Now;
+                            lg.LastActivityDate = DateTime.Now;
                             us.IsSucceeded = false;
                             us.Message = string.Format(_localizer[name: "W0021"]);
                             us.StatusCode = "W0021";
@@ -106,14 +114,89 @@ namespace eSya.Gateway.DL.Repository
                     {
                         string enterpass = CryptGeneration.Decrypt(password);
                         string existingpass = CryptGeneration.Decrypt(Encoding.UTF8.GetString(validpassword.EPasswd));
+
+                        var logiattempt = await db.GtEcgwrls.Where(w => w.GwruleId == 3 && w.ActiveStatus)
+                                 .FirstOrDefaultAsync();
+                        var loginprocessRule = db.GtEcprrls
+                           .Join(db.GtEcaprls,
+                               p => p.ProcessId,
+                               r => r.ProcessId,
+                        (p, r) => new { p, r })
+                        .Where(w => w.p.ProcessId == 4 && w.r.RuleId == 2
+                               && w.p.ActiveStatus && w.r.ActiveStatus)
+                          .Count();
+                       
                         if (existingpass != enterpass)
                         {
-                            us.IsSucceeded = false;
-                            us.Message = string.Format(_localizer[name: "W0002"]);
-                            us.StatusCode = "W0002";
-                            return us;
+                            if (lg != null && logiattempt != null && loginprocessRule > 0)
+                            {
+                                maxUnsuccessfulAttempts = logiattempt.RuleValue;
+                                lg.LoginAttemptDate = DateTime.Now;
+                                lg.LastActivityDate = DateTime.Now;
+                                us.IsSucceeded = false;
+                                us.Message = string.Format(_localizer[name: "W0002"]);
+                                us.StatusCode = "W0002";
 
+                                if (lg.LoginAttemptDate.HasValue && lg.LoginAttemptDate.Value.Date == DateTime.Now.Date)
+
+                                    lg.UnsuccessfulAttempt += 1;
+
+
+                                else
+
+                                    lg.UnsuccessfulAttempt = 1;
+                                lg.LoginAttemptDate = DateTime.Now;
+                                if ((maxUnsuccessfulAttempts - lg.UnsuccessfulAttempt) > 0)
+                                    us.Message += string.Format(_localizer[name: "W0010"]) + ":" + (maxUnsuccessfulAttempts - lg.UnsuccessfulAttempt).ToString();
+
+                                await db.SaveChangesAsync();
+                                if (maxUnsuccessfulAttempts > 0)
+                                {
+
+                                    if (lg.UnsuccessfulAttempt >= maxUnsuccessfulAttempts)
+                                    {
+                                        if (unLockLoginAfter > 0)
+                                        {
+                                            if (lg.LoginAttemptDate.HasValue)
+                                                if (lg.LoginAttemptDate.Value.AddHours((int)unLockLoginAfter) > DateTime.Now)
+                                                {
+                                                    lg.BlockSignIn = true;
+                                                    lg.LastActivityDate = DateTime.Now;
+                                                    var waitingHour = (lg.LoginAttemptDate.Value.AddHours((int)unLockLoginAfter) - DateTime.Now);
+                                                    us.IsSucceeded = false;
+                                                    us.Message = string.Format(_localizer[name: "W0006"]) + waitingHour.Hours.ToString() + ":" + waitingHour.Minutes.ToString() + string.Format(_localizer[name: "W0007"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
+                                                    await db.SaveChangesAsync();
+                                                    return us;
+                                                }
+                                        }
+                                        else
+                                        {
+                                            lg.BlockSignIn = true;
+                                            lg.LastActivityDate = DateTime.Now;
+                                            us.IsSucceeded = false;
+                                            us.Message = string.Format(_localizer[name: "W0009"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
+                                            await db.SaveChangesAsync();
+                                            return us;
+                                        }
+
+                                    }
+                                }
+
+                                await db.SaveChangesAsync();
+                                return us;
+                            }
+                            else
+                            {
+                                lg.LoginAttemptDate = DateTime.Now;
+                                lg.LastActivityDate = DateTime.Now;
+                                us.IsSucceeded = false;
+                                us.Message = string.Format(_localizer[name: "W0002"]);
+                                us.StatusCode = "W0002";
+                                await db.SaveChangesAsync();
+                                return us;
+                            }
                         }
+                       
 
                     }
                     else
@@ -124,44 +207,10 @@ namespace eSya.Gateway.DL.Repository
                         return us;
                     }
 
-                    //var unLockLoginAfter = await db.GtEupapp.Where(w => w.ParameterId == AppParameter.Password_UnLockLoginAfter && w.ActiveStatus).Select(s => (int)s.ParmValue).DefaultIfEmpty(0).FirstOrDefaultAsync();
-                    //var maxUnsuccessfulAttempts = await db.GtEupapp.Where(w => w.ParameterId == AppParameter.Password_MaxUnsuccessfulAttempts && w.ActiveStatus).Select(s => (int)s.ParmValue).DefaultIfEmpty(0).FirstOrDefaultAsync();
-
-                    if (maxUnsuccessfulAttempts > 0)
-                    {
-                        //SNO-6 resolved
-                        if (lg.UnsuccessfulAttempt >= maxUnsuccessfulAttempts)
-                        {
-                            if (unLockLoginAfter > 0)
-                            {
-                                if (lg.LoginAttemptDate.HasValue)
-                                    if (lg.LoginAttemptDate.Value.AddHours((int)unLockLoginAfter) > DateTime.Now)
-                                    {
-
-                                        var waitingHour = (lg.LoginAttemptDate.Value.AddHours((int)unLockLoginAfter) - DateTime.Now);
-                                        us.IsSucceeded = false;
-                                        us.Message = string.Format(_localizer[name: "W0006"]) + waitingHour.Hours.ToString() + ":" + waitingHour.Minutes.ToString() + string.Format(_localizer[name: "W0007"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
-                                        return us;
-                                    }
-                            }
-                            else
-                            {
-                                us.IsSucceeded = false;
-                                us.Message = string.Format(_localizer[name: "W0009"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
-                                return us;
-                            }
-                            //SNO-6
-                        }
-                    }
-                    //SNO-6
-                    //if (lg.Password == password)
-                    //{
-                    //lg.UnsuccessfulLoginAttempts = 0;
+                    lg.UnsuccessfulAttempt = 0;
                     lg.LastActivityDate = DateTime.Now;
-                    //SNO-6
-                    //us.ForcePasswordChangeNextSignIn = lg.ForcePasswordChangeNextSignIn;
-                    us.BlockSignIn = lg.BlockSignIn;
-
+                    lg.LoginAttemptDate = DateTime.Now;
+                    us.BlockSignIn = false;
                     us.IsSucceeded = true;
                     us.UserID = lg.UserId;
                     //SNO-6
@@ -181,15 +230,9 @@ namespace eSya.Gateway.DL.Repository
                        .ToDictionary(x => x.Key, x => x.Value);
 
                     if (ub.Count() > 0)
-                        //SNO-6
-                        //us.UserType = ub.FirstOrDefault().u.UserType ?? 0;
-
+                       
                         if (ub.Where(w => w.u.AllowMtfy).Count() > 0)
-                        {  //SNO-6
-                           //us.l_FinancialYear = db.GtEcclcos
-                           //    .Where(w => w.FromDate.Date <= System.DateTime.Now.Date)
-
-                            //.Select(x => (int)x.FinancialYear).Distinct().OrderByDescending(o => o).ToList();
+                        {  
 
 
 
@@ -220,30 +263,7 @@ namespace eSya.Gateway.DL.Repository
                                 .ToList();
 
                         }
-                    //SNO-6
-                    //}
-                    else
-                    {
-                        us.IsSucceeded = false;
-                        us.Message = string.Format(_localizer[name: "W0002"]);
-                        //SNO-6
-                        //if (lg.LoginAttemptDate.HasValue && lg.LoginAttemptDate.Value.Date == DateTime.Now.Date)
-
-                        //lg.UnsuccessfulLoginAttempts += 1;
-
-                        //else
-
-                        //lg.UnsuccessfulLoginAttempts = 1;
-                        //lg.LoginAttemptDate = DateTime.Now;
-                        //SNO-6
-                        //if ((maxUnsuccessfulAttempts - lg.UnsuccessfulLoginAttempts) > 0)
-                        //    us.Message += string.Format(_localizer[name: "W0010"])+":" + (maxUnsuccessfulAttempts - lg.UnsuccessfulLoginAttempts).ToString();
-
-                        //else if (maxUnsuccessfulAttempts > 0)
-                        //    us.Message += string.Format(_localizer[name: "W0009"]) + maxUnsuccessfulAttempts.ToString() + string.Format(_localizer[name: "W0008"]);
-                        //us.StatusCode = "W0009";
-                    }
-
+                
                     await db.SaveChangesAsync();
                 }
                 else
@@ -254,8 +274,7 @@ namespace eSya.Gateway.DL.Repository
 
 
                 }
-
-                return us;
+               return us;
             }
         }
 
