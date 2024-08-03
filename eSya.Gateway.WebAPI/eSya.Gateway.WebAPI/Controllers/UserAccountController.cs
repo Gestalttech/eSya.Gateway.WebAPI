@@ -175,6 +175,37 @@ namespace eSya.Gateway.WebAPI.Controllers
         }
         #endregion
 
-        
+        #region Mobile Login functionality
+        [HttpGet]
+        public async Task<IActionResult> ValidateUserMobileNumberGetOTP(string mobileNo)
+        {
+            var ds = await _userAccountRepository.ValidateUserMobileNumberGetOTP(mobileNo);
+            return Ok(ds);
+        }
+        [HttpGet]
+        public async Task<IActionResult> ValidateUserMobileNumberbyOTP(string mobileNo, string otp, int expirytime)
+        {
+            var ds = await _userAccountRepository.ValidateUserMobileNumberbyOTP(mobileNo, otp, expirytime);
+            return Ok(ds);
+        }
+        [HttpGet]
+        public async Task<IActionResult> ValidateUserMobileNumberGetRandomSecurityQuestion(string mobileNo)
+        {
+            var ds = await _userAccountRepository.ValidateUserMobileNumberGetRandomSecurityQuestion(mobileNo);
+            return Ok(ds);
+        }
+        [HttpPost]
+        public async Task<IActionResult> ValidateMobileLoginUserSecurityQuestion(DO_UserSecurityQuestions obj)
+        {
+            var ds = await _userAccountRepository.ValidateMobileLoginUserSecurityQuestion(obj);
+            return Ok(ds);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetUserLocationsbyMobileNumber(string mobileNo)
+        {
+            var ds = await _userAccountRepository.GetUserLocationsbyMobileNumber(mobileNo);
+            return Ok(ds);
+        }
+        #endregion
     }
 }

@@ -48,6 +48,12 @@ namespace eSya.Gateway.IF
         Task<DO_ReturnParameter> InsertUserSecurityQuestion(List<DO_UserSecurityQuestions> obj);
         #endregion
 
-        
+        #region Mobile Login functionality
+        Task<DO_UserAccount> ValidateUserMobileNumberGetOTP(string mobileNo);
+        Task<DO_UserAccount> ValidateUserMobileNumberbyOTP(string mobileNo, string otp, int expirytime);
+        Task<DO_UserSecurityQuestions> ValidateUserMobileNumberGetRandomSecurityQuestion(string mobileNo);
+        Task<DO_UserAccount> ValidateMobileLoginUserSecurityQuestion(DO_UserSecurityQuestions obj);
+        Task<DO_UserFinBusinessLocation> GetUserLocationsbyMobileNumber(string mobileNo);
+        #endregion
     }
 }

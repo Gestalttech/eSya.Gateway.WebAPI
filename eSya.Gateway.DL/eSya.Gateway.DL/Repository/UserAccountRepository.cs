@@ -1797,7 +1797,487 @@ namespace eSya.Gateway.DL.Repository
         }
         #endregion
 
-        
+        #region Mobile Login functionality
+        public async Task<DO_UserAccount> ValidateUserMobileNumberGetOTP(string mobileNo)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+
+                    try
+                    {
+
+                        DO_UserAccount us = new DO_UserAccount();
+                        var user = await db.GtEuusbls.Join(db.GtEuusms,
+                            b => b.UserId,
+                            u => u.UserId,
+                            (b, u) => new { b, u })
+                        .Where(w => w.b.MobileNumber.ToUpper().Replace(" ", "") == mobileNo.ToUpper().Replace(" ", "") && w.b.ActiveStatus)
+                         .Select(r => new
+                         {
+                             r.b.MobileNumber,
+                             r.u.UserId,
+                             r.u.LoginId,
+                             r.u.LoginDesc,
+                             r.u.ActiveStatus,
+                             r.u.IsUserAuthenticated,
+                             r.u.BlockSignIn,
+                             r.u.CreatePasswordInNextSignIn
+                         }).FirstOrDefaultAsync();
+
+                        if (user != null)
+                        {
+                            if (!user.ActiveStatus)
+                            {
+                                us.IsSucceeded = false;
+                                us.Message = string.Format(_localizer[name: "W0004"]);
+                                us.StatusCode = "W0004";
+                                return us;
+                            }
+                            if (user.BlockSignIn)
+                            {
+                                us.IsSucceeded = false;
+                                us.Message = string.Format(_localizer[name: "W0005"]);
+                                us.StatusCode = "W0005";
+                                return us;
+                            }
+                            if (user.CreatePasswordInNextSignIn)
+                            {
+                                us.IsSucceeded = false;
+                                us.Message = string.Format(_localizer[name: "W0016"]);
+                                us.StatusCode = "W0016";
+                                return us;
+                            }
+                            if (!user.IsUserAuthenticated)
+                            {
+                                us.IsSucceeded = false;
+                                us.Message = string.Format(_localizer[name: "W0018"]);
+                                us.StatusCode = "W0018";
+                                return us;
+                            }
+
+                            var userOtp = db.GtEuuotps.Where(x => x.UserId == user.UserId).FirstOrDefault();
+                            Random rnd = new Random();
+                            var OTP = rnd.Next(100000, 999999).ToString();
+
+                            if (userOtp == null)
+                            {
+                                var lotp = new GtEuuotp()
+                                {
+                                    UserId = user.UserId,
+                                    Otpnumber = OTP,
+                                    Otpsource = "Mobile Login OTP",
+                                    OtpgeneratedDate = System.DateTime.Now,
+                                    UsageStatus = false,
+                                    ActiveStatus = true,
+                                    FormId = "0",
+                                    CreatedBy = user.UserId,
+                                    CreatedOn = System.DateTime.Now,
+                                    CreatedTerminal = "GTPL"
+                                };
+                                db.GtEuuotps.Add(lotp);
+                                db.SaveChanges();
+
+                            }
+                            else
+                            {
+                                userOtp.Otpnumber = OTP;
+                                userOtp.Otpsource = "Mobile Login OTP";
+                                userOtp.UsageStatus = false;
+                                userOtp.ActiveStatus = true;
+                                userOtp.OtpgeneratedDate = System.DateTime.Now;
+                                userOtp.ModifiedBy = user.UserId;
+                                userOtp.ModifiedOn = System.DateTime.Now;
+                                userOtp.ModifiedTerminal = "GTPL";
+                            }
+                            db.SaveChanges();
+                            dbContext.Commit();
+                            us.IsSucceeded = true;
+                            us.Message = "Mobile Number Validated";
+                            us.OTP = OTP;
+                        }
+                        else
+                        {
+                            us.IsSucceeded = false;
+                            us.Message = "Mobile Number Not Exist";
+
+                        }
+                        return us;
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+
+                }
+            }
+        }
+        public async Task<DO_UserAccount> ValidateUserMobileNumberbyOTP(string mobileNo, string otp, int expirytime)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+
+                var user = await db.GtEuusbls.Join(db.GtEuusms,
+                            b => b.UserId,
+                            u => u.UserId,
+                            (b, u) => new { b, u })
+                        .Where(w => w.b.MobileNumber.ToUpper().Replace(" ", "") == mobileNo.ToUpper().Replace(" ", "") && w.b.ActiveStatus && w.u.ActiveStatus)
+                         .Select(r => new
+                         {
+                             r.b.MobileNumber,
+                             r.u.UserId,
+                             r.u.LoginId,
+                             r.u.LoginDesc,
+
+                         }).FirstOrDefaultAsync();
+
+                if (user != null)
+                {
+                    var validTime = DateTime.Now.AddMinutes(-expirytime);
+
+                    var userOtp = db.GtEuuotps.Where(x => x.UserId == user.UserId).FirstOrDefault();
+
+                    if (userOtp != null)
+                    {
+                        var expOtp = await db.GtEuuotps
+                       .Where(t => t.OtpgeneratedDate >= validTime && (!t.UsageStatus) && t.ActiveStatus)
+                       .FirstOrDefaultAsync();
+                        if (expOtp == null)
+                        {
+                            us.SecurityQuestionId = 0;
+                            us.IsSucceeded = false;
+                            us.Message = "OTP Expired";
+                            return us;
+                        }
+
+                        if (userOtp.Otpnumber != otp)
+                        {
+                            us.SecurityQuestionId = 0;
+                            us.IsSucceeded = false;
+                            us.Message = "In Valid OTP";
+                            return us;
+                        }
+                        if (userOtp.Otpnumber == otp)
+                        {
+                            us.SecurityQuestionId = 0;
+                            us.IsSucceeded = true;
+                            us.Message = "Your OTP has Sucessfully Validated";
+                            us.LoginID = user.LoginId;
+                            us.UserID = user.UserId;
+                            us.LoginDesc = user.LoginDesc;
+                            userOtp.UsageStatus = true;
+                            userOtp.ActiveStatus = false;
+                            userOtp.ModifiedOn = System.DateTime.Now;
+                            // redirect tologin
+                            var lg = await db.GtEuusms
+                              .Where(w => w.UserId == user.UserId)
+                              .FirstOrDefaultAsync();
+
+                            if (lg != null)
+                            {
+                                lg.UnsuccessfulAttempt = 0;
+                                lg.LastActivityDate = DateTime.Now;
+                                lg.LoginAttemptDate = DateTime.Now;
+                                lg.BlockSignIn = false;
+                                us.IsSucceeded = true;
+                                us.UserID = lg.UserId;
+                                var ub = db.GtEuusbls
+                               .Join(db.GtEcbslns,
+                                  u => u.BusinessKey,
+                                  b => b.BusinessKey,
+                                  (u, b) => new { u, b })
+                               .Where(w => w.u.UserId == lg.UserId);
+
+                                us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.BusinessName + "-" + x.b.LocationDescription))
+                                               .ToDictionary(x => x.Key, x => x.Value);
+
+                                us.l_FinancialYear = db.GtEcblcls
+                               .Where(x => x.ActiveStatus) // Filter active records
+                               .Select(x => x.CalenderKey) // Select the CalenderKey
+                               .Where(calenderKey => calenderKey.Length > 2) // Ensure the string has more than 2 characters
+                               .Select(calenderKey => calenderKey.Substring(2)) // Remove the first two characters
+                               .Select(calenderKey => calenderKey.Length > 4 ? calenderKey.Substring(0, 4) : calenderKey) // Truncate after four characters if length > 4
+                               .Distinct()
+                               .OrderByDescending(calenderKey => calenderKey)
+                               .Select(calenderKey => int.Parse(calenderKey)) // Convert to integer
+                               .ToList();
+                                db.SaveChanges();
+                            }   
+
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    us.SecurityQuestionId = 0;
+                    us.IsSucceeded = false;
+                    us.Message = "Mobile Number Not Exist";
+                }
+
+                return us;
+            }
+        }
+        public async Task<DO_UserSecurityQuestions> ValidateUserMobileNumberGetRandomSecurityQuestion(string mobileNo)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+
+                    try
+                    {
+
+                        DO_UserSecurityQuestions seq = new DO_UserSecurityQuestions();
+                        var user = await db.GtEuusbls.Join(db.GtEuusms,
+                            b => b.UserId,
+                            u => u.UserId,
+                            (b, u) => new { b, u })
+                        .Where(w => w.b.MobileNumber.ToUpper().Replace(" ", "") == mobileNo.ToUpper().Replace(" ", "") && w.b.ActiveStatus)
+                         .Select(r => new
+                         {
+                             r.b.MobileNumber,
+                             r.u.UserId,
+                             r.u.LoginId,
+                             r.u.LoginDesc,
+                             r.u.ActiveStatus,
+                             r.u.IsUserAuthenticated,
+                             r.u.BlockSignIn,
+                             r.u.CreatePasswordInNextSignIn
+
+                         }).FirstOrDefaultAsync();
+
+
+
+                        if (user != null)
+                        {
+                            if (!user.ActiveStatus)
+                            {
+                                seq.IsSucceeded = false;
+                                seq.Message = string.Format(_localizer[name: "W0004"]);
+                            }
+                            if (user.BlockSignIn)
+                            {
+                                seq.IsSucceeded = false;
+                                seq.Message = string.Format(_localizer[name: "W0005"]);
+                            }
+                            if (user.CreatePasswordInNextSignIn)
+                            {
+                                seq.IsSucceeded = false;
+                                seq.Message = string.Format(_localizer[name: "W0016"]);
+                            }
+                            if (!user.IsUserAuthenticated)
+                            {
+                                seq.IsSucceeded = false;
+                                seq.Message = string.Format(_localizer[name: "W0018"]);
+                            }
+
+                            var QuestionsList = db.GtEuussqs.Where(x => x.UserId == user.UserId).ToList();
+                            if (QuestionsList != null)
+                            {
+                                Random random = new Random();
+                                int questionIndex = random.Next(QuestionsList.Count);
+                                var seqQuestion = QuestionsList[questionIndex];
+                                if (seqQuestion != null)
+                                {
+                                    seq.IsSucceeded = true;
+                                    seq.Message = "Mobile Number Validated";
+                                    seq.SecurityQuestionId = seqQuestion.SecurityQuestionId;
+                                    seq.UserId = seqQuestion.UserId;
+                                    seq.QuestionDesc = db.GtEcapcds.Where(x => x.ApplicationCode == seq.SecurityQuestionId).FirstOrDefault().CodeDesc;
+
+                                }
+                                else
+                                {
+                                    seq.IsSucceeded = false;
+                                    seq.Message = "Mobile Number Not Exist";
+                                }
+
+                            }
+
+                        }
+                        else
+                        {
+                            seq.IsSucceeded = false;
+                            seq.Message = "Mobile Number Not Exist";
+
+                        }
+                        return seq;
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        dbContext.Rollback();
+                        throw ex;
+                    }
+
+                }
+            }
+        }
+        public async Task<DO_UserAccount> ValidateMobileLoginUserSecurityQuestion(DO_UserSecurityQuestions obj)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+
+                var validAns = await db.GtEuussqs.Where(x => x.UserId == obj.UserId && x.SecurityQuestionId == obj.SecurityQuestionId && x.ActiveStatus).FirstOrDefaultAsync();
+                string answer = "";
+                bool validQuestion = false;
+                if (validAns != null)
+                {
+                    answer = CryptGeneration.Decrypt(validAns.SecurityAnswer);
+                    validQuestion = answer.ToUpper().Replace(" ", "") == obj.SecurityAnswer.ToUpper().Replace(" ", "");
+                }
+
+                if (validQuestion)
+                {
+                    var user = await db.GtEuusms.Where(x => x.ActiveStatus && x.UserId == obj.UserId)
+                     .Select(r => new
+                     {
+                         r.UserId,
+                         r.LoginId,
+                         r.LoginDesc
+                     }).FirstOrDefaultAsync();
+                    if (user != null)
+                    {
+                        us.IsSucceeded = true;
+                        us.Message = "Sequrity Question Validated";
+                        us.UserID = user.UserId;
+                        us.LoginID = user.LoginId;
+                        us.LoginDesc = user.LoginDesc;
+
+                        // redirect tologin
+                        var lg = await db.GtEuusms
+                          .Where(w => w.UserId == user.UserId)
+                          .FirstOrDefaultAsync();
+
+                        if (lg != null)
+                        {
+                            lg.UnsuccessfulAttempt = 0;
+                            lg.LastActivityDate = DateTime.Now;
+                            lg.LoginAttemptDate = DateTime.Now;
+                            lg.BlockSignIn = false;
+                            us.IsSucceeded = true;
+                            us.UserID = lg.UserId;
+                            var ub = db.GtEuusbls
+                           .Join(db.GtEcbslns,
+                              u => u.BusinessKey,
+                              b => b.BusinessKey,
+                              (u, b) => new { u, b })
+                           .Where(w => w.u.UserId == lg.UserId);
+
+                            us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.BusinessName + "-" + x.b.LocationDescription))
+                                           .ToDictionary(x => x.Key, x => x.Value);
+
+                            us.l_FinancialYear = db.GtEcblcls
+                           .Where(x => x.ActiveStatus) // Filter active records
+                           .Select(x => x.CalenderKey) // Select the CalenderKey
+                           .Where(calenderKey => calenderKey.Length > 2) // Ensure the string has more than 2 characters
+                           .Select(calenderKey => calenderKey.Substring(2)) // Remove the first two characters
+                           .Select(calenderKey => calenderKey.Length > 4 ? calenderKey.Substring(0, 4) : calenderKey) // Truncate after four characters if length > 4
+                           .Distinct()
+                           .OrderByDescending(calenderKey => calenderKey)
+                           .Select(calenderKey => int.Parse(calenderKey)) // Convert to integer
+                           .ToList();
+                            db.SaveChanges();
+                        }
+
+                    }
+                    else
+                    {
+                        us.IsSucceeded = false;
+                        us.Message = "You Entered Wrong Answer";
+                        us.UserID = user.UserId;
+                    }
+
+                }
+                else
+                {
+                    us.IsSucceeded = false;
+                    us.Message = "You Entered Wrong Answer";
+                    us.UserID = obj.UserId;
+                }
+
+                return us;
+            }
+        }
+        public async Task<DO_UserFinBusinessLocation> GetUserLocationsbyMobileNumber(string mobileNo)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserFinBusinessLocation us = new DO_UserFinBusinessLocation();
+
+                var user = await db.GtEuusbls.Join(db.GtEuusms,
+                           b => b.UserId,
+                           u => u.UserId,
+                           (b, u) => new { b, u })
+                       .Where(w => w.b.MobileNumber.ToUpper().Replace(" ", "") == mobileNo.ToUpper().Replace(" ", "") && w.b.ActiveStatus && w.u.ActiveStatus)
+                        .Select(r => new
+                        {
+                            r.b.MobileNumber,
+                            r.u.UserId,
+                            r.u.LoginId,
+                            r.u.LoginDesc,
+                            r.u.ActiveStatus,
+                            r.u.IsUserAuthenticated,
+                            r.u.BlockSignIn,
+                            r.u.CreatePasswordInNextSignIn
+                        }).FirstOrDefaultAsync();
+                if (user != null)
+                {
+                    var lg = await db.GtEuusms
+                    .Where(w => w.UserId == user.UserId)
+                    .FirstOrDefaultAsync();
+
+                    if (lg != null)
+                    {
+                        var ub = db.GtEuusbls
+                            .Join(db.GtEcbslns,
+                                u => u.BusinessKey,
+                                b => b.BusinessKey,
+                                (u, b) => new { u, b })
+                            .Where(w => w.u.UserId == lg.UserId);
+
+                        us.lstUserLocation = ub.Select(x => new DO_UserFinBusinessLocation()
+                        {
+                            BusinessKey = x.u.BusinessKey,
+                            BusinessLocation = x.b.BusinessName + "-" + x.b.LocationDescription
+                        }).GroupBy(x => new { x.BusinessKey }).Select(g => g.First()).ToList();
+
+                        if (ub.Count() > 0)
+
+                            if (ub.Where(w => w.u.AllowMtfy).Count() > 0)
+                            {
+                                us.lstFinancialYear = db.GtEcblcls
+                                 .Where(x => x.ActiveStatus) // Filter active records
+                                 .Select(x => x.CalenderKey) // Select the CalenderKey
+                                 .Where(calenderKey => calenderKey.Length > 2) // Ensure the string has more than 2 characters
+                                 .Select(calenderKey => calenderKey.Substring(2)) // Remove the first two characters
+                                 .Select(calenderKey => calenderKey.Length > 4 ? calenderKey.Substring(0, 4) : calenderKey) // Truncate after four characters if length > 4
+                                 .Distinct()
+                                 .OrderByDescending(calenderKey => calenderKey)
+                                 .Select(calenderKey => int.Parse(calenderKey)) // Convert to integer
+                                 .ToList();
+
+                            }
+                            else
+                            {
+                                us.lstFinancialYear = new List<int> { System.DateTime.Now.Year };
+                            }
+
+                        return us;
+                    }
+
+                }
+               
+                
+                return us;
+            }
+        }
+        #endregion
     }
 }
 
