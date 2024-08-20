@@ -11,5 +11,7 @@ namespace eSya.Gateway.IF
         Task<List<DO_ISDCodes>> GetISDCodes();
 
         Task<List<DO_ApplicationCodes>> GetApplicationCodesByCodeType(int codeType);
+
+        Task<bool> GetLocationSMSApplicable(int BusinessKey);
     }
 }

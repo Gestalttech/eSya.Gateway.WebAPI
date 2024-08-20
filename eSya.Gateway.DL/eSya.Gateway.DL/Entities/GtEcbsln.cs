@@ -7,6 +7,7 @@ namespace eSya.Gateway.DL.Entities
     {
         public GtEcbsln()
         {
+            GtEcpabls = new HashSet<GtEcpabl>();
             GtEuusfas = new HashSet<GtEuusfa>();
         }
 
@@ -32,6 +33,7 @@ namespace eSya.Gateway.DL.Entities
         public DateTime? ModifiedOn { get; set; }
         public string? ModifiedTerminal { get; set; }
 
+        public virtual ICollection<GtEcpabl> GtEcpabls { get; set; }
         public virtual ICollection<GtEuusfa> GtEuusfas { get; set; }
     }
 }

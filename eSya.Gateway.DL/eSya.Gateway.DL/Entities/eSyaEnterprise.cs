@@ -8,7 +8,6 @@ namespace eSya.Gateway.DL.Entities
     public partial class eSyaEnterprise : DbContext
     {
         public static string _connString = "";
-
         public eSyaEnterprise()
         {
         }
@@ -33,6 +32,7 @@ namespace eSya.Gateway.DL.Entities
         public virtual DbSet<GtEcltfc> GtEcltfcs { get; set; } = null!;
         public virtual DbSet<GtEcmamn> GtEcmamns { get; set; } = null!;
         public virtual DbSet<GtEcmnfl> GtEcmnfls { get; set; } = null!;
+        public virtual DbSet<GtEcpabl> GtEcpabls { get; set; } = null!;
         public virtual DbSet<GtEcprrl> GtEcprrls { get; set; } = null!;
         public virtual DbSet<GtEcsbmn> GtEcsbmns { get; set; } = null!;
         public virtual DbSet<GtEcsmsc> GtEcsmscs { get; set; } = null!;
@@ -57,6 +57,7 @@ namespace eSya.Gateway.DL.Entities
         public virtual DbSet<GtEuuspw> GtEuuspws { get; set; } = null!;
         public virtual DbSet<GtEuusrl> GtEuusrls { get; set; } = null!;
         public virtual DbSet<GtEuussq> GtEuussqs { get; set; } = null!;
+        public virtual DbSet<GtSmsloc> GtSmslocs { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -561,6 +562,43 @@ namespace eSya.Gateway.DL.Entities
                     .HasForeignKey(d => d.MainMenuId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_GT_ECMNFL_GT_ECMAMN");
+            });
+
+            modelBuilder.Entity<GtEcpabl>(entity =>
+            {
+                entity.HasKey(e => new { e.BusinessKey, e.ParameterId });
+
+                entity.ToTable("GT_ECPABL");
+
+                entity.Property(e => e.ParameterId).HasColumnName("ParameterID");
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.FormId)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("FormID");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.ParmDesc)
+                    .HasMaxLength(15)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.ParmPerc).HasColumnType("numeric(5, 2)");
+
+                entity.Property(e => e.ParmValue).HasColumnType("numeric(18, 6)");
+
+                entity.HasOne(d => d.BusinessKeyNavigation)
+                    .WithMany(p => p.GtEcpabls)
+                    .HasPrincipalKey(p => p.BusinessKey)
+                    .HasForeignKey(d => d.BusinessKey)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_GT_ECPABL_GT_ECBSLN");
             });
 
             modelBuilder.Entity<GtEcprrl>(entity =>
@@ -1312,6 +1350,33 @@ namespace eSya.Gateway.DL.Entities
                 entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
 
                 entity.Property(e => e.SecurityAnswer).HasMaxLength(250);
+            });
+
+            modelBuilder.Entity<GtSmsloc>(entity =>
+            {
+                entity.HasKey(e => new { e.BusinessKey, e.FormId, e.Smsid });
+
+                entity.ToTable("GT_SMSLOC");
+
+                entity.Property(e => e.FormId).HasColumnName("FormID");
+
+                entity.Property(e => e.Smsid)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("SMSID");
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.FormId1)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("FormID1");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
             });
 
             OnModelCreatingPartial(modelBuilder);

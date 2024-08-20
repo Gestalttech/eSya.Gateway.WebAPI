@@ -11,5 +11,6 @@ namespace NG.Gateway.DO.StaticVariables
         public const int Password_UnLockLoginAfter = 2;
         public const int Password_VerfiyPreviousPasswordsResetValue  = 3;
 
+        public const int SMS_Applicable = 2;
     }
 }

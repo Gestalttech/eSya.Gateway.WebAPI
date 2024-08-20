@@ -1,4 +1,5 @@
-﻿using eSya.Gateway.DO;
+﻿using eSya.Gateway.DL.Repository;
+using eSya.Gateway.DO;
 using eSya.Gateway.IF;
 using eSya.Gateway.WebAPI.Services;
 using Microsoft.AspNetCore.Http;
@@ -12,12 +13,14 @@ namespace eSya.Gateway.WebAPI.Controllers
     {
         private readonly ISmsStatementRepository _smsStatementRepository;
         private readonly IUserAccountRepository _userAccountRepository;
+        private readonly ICommonRepository _CommonRepository;
         private readonly ISmsSender _smsSender;
 
-        public SmsSenderController(ISmsStatementRepository smsStatementRepository, IUserAccountRepository userAccountRepository, ISmsSender smsSender)
+        public SmsSenderController(ISmsStatementRepository smsStatementRepository, IUserAccountRepository userAccountRepository, ICommonRepository commonRepository, ISmsSender smsSender)
         {
             _smsStatementRepository = smsStatementRepository;
             _userAccountRepository = userAccountRepository;
+            _CommonRepository = commonRepository;
             _smsSender = smsSender;
         }
 
@@ -169,6 +172,72 @@ namespace eSya.Gateway.WebAPI.Controllers
                 smsTemplate = smsTemplate.Replace("V0007", sv.ScheduleDate.Value.ToString("dd-MMM-yyyy"));
 
             return smsTemplate;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendSmsonSaveClick(DO_SmsParameter sp_obj)
+        {
+            var ds = await _CommonRepository.GetLocationSMSApplicable(sp_obj.BusinessKey);
+
+            if (ds)
+            {
+
+
+                var fs = await _smsStatementRepository.GetSmsonSaveClick(sp_obj);
+
+                //if (sp_obj.IsUserPasswordInclude)
+                //{
+                //    sp_obj.Password = await _userAccountRepository.GetUserPassword(sp_obj.UserID);
+
+                //}
+
+                string mobileNumber = "", messageText = "";
+                foreach (var s in fs)
+                {
+                    foreach (var r in s.l_SmsParam.Where(w => w.MobileNumber != null))
+                    {
+                        if (r.ParameterID == (int)smsParams.User)
+                        {
+                            sp_obj.LoginID = r.ID;
+                            sp_obj.UserName = r.Name;
+                        }
+                    }
+                    messageText = TextualMessageReplaceByVariables(s.SMSStatement, sp_obj);
+                    foreach (var p in s.l_SmsParam.Where(w => w.MobileNumber != null))
+                    {
+                        if (!string.IsNullOrEmpty(p.MobileNumber))
+                        {
+                            var rp = await _smsSender.SendAsync(p.MobileNumber, messageText);
+                            await _smsStatementRepository.Insert_SmsLog(new NG.Gateway.DO.DO_SMSLog
+                            {
+                                MessageType = sp_obj.MessageType,
+                                MobileNumber = p.MobileNumber,
+                                SMSStatement = messageText,
+                                RequestMessage = rp.RequestMessage,
+                                ResponseMessage = rp.ResponseMessage,
+                                SendStatus = rp.SendStatus,
+                            });
+                        }
+                    }
+                    if (s.l_SmsRecipient.Count() > 0)
+                        mobileNumber = string.Join(",", s.l_SmsRecipient.Select(w => w.MobileNumber));
+
+                    if (!string.IsNullOrEmpty(mobileNumber))
+                    {
+                        var rp = await _smsSender.SendAsync(mobileNumber, messageText);
+                        await _smsStatementRepository.Insert_SmsLog(new NG.Gateway.DO.DO_SMSLog
+                        {
+                            MessageType = sp_obj.MessageType,
+                            MobileNumber = mobileNumber,
+                            SMSStatement = messageText,
+                            RequestMessage = rp.RequestMessage,
+                            ResponseMessage = rp.ResponseMessage,
+                            SendStatus = rp.SendStatus,
+                        });
+                    }
+                }
+            }
+            return Ok();
         }
     }
 }

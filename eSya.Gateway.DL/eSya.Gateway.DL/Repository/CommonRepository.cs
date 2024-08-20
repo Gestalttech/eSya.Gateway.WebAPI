@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.Http.Headers;
+using NG.Gateway.DO.StaticVariables;
 
 
 namespace eSya.Gateway.DL.Repository
@@ -62,5 +64,15 @@ namespace eSya.Gateway.DL.Repository
             }
         }
 
+        public async Task<bool> GetLocationSMSApplicable(int BusinessKey)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                var lg = await db.GtEcpabls
+                    .Where(w => w.BusinessKey == BusinessKey && w.ParameterId == AppParameter.SMS_Applicable && w.ActiveStatus)
+                    .Select(s => s.ParmAction).FirstOrDefaultAsync();
+                return lg;
+            }
+        }
     }
 }

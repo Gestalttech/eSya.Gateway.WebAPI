@@ -229,5 +229,69 @@ namespace eSya.Gateway.DL.Repository
             }
             return true;
         }
+
+        public async Task<List<DO_SmsStatement>> GetSmsonSaveClick(DO_SmsParameter sp)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var fs = await db.GtEcsmshes.Join(db.GtSmslocs,
+                           u => u.FormId,
+                           b => b.FormId,
+                           (u, b) => new { u, b })
+                        .Where(w => w.u.FormId == sp.FormID && w.u.TeventId == sp.TEventID
+                                    && w.u.ActiveStatus == true && w.b.BusinessKey == sp.BusinessKey)
+                        .Select(r => new DO_SmsStatement
+                        {
+                            SMSID = r.u.Smsid,
+                            SMSDescription = r.u.Smsdescription,
+                            SMSStatement = r.u.Smsstatement,
+                            l_SmsParam = r.u.GtEcsmsds.Where(w => w.ParmAction && w.ActiveStatus)
+                                         .Select(d => new DO_SmsParam
+                                         {
+                                             ParameterID = d.ParameterId,
+                                             ParmAction = d.ParmAction
+                                         }).ToList(),
+                            l_SmsRecipient = r.u.GtEcsmsrs.Where(w => w.BusinessKey == sp.BusinessKey && w.ActiveStatus)
+                                        .Select(x => new DO_SmsRecipient
+                                        {
+                                            MobileNumber = x.MobileNumber,
+                                            RecipientName = x.RecipientName,
+                                            Remarks = x.Remarks
+                                        }).ToList()
+                        }).ToListAsync();
+
+                    foreach (var s in fs)
+                    {
+                        foreach (var p in s.l_SmsParam)
+                        {
+                            int id = 0;
+                            if (p.ParameterID == (int)smsParams.Direct)
+                            {
+                                p.MobileNumber = sp.MobileNumber;
+                                p.Name = sp.Name;
+                            }
+
+                            if (p.ParameterID == (int)smsParams.User)
+                                id = sp.UserID;
+                            if (id > 0)
+                            {
+                                var ms = await GetMasterDetail(p.ParameterID, id);
+                                p.MobileNumber = ms.MobileNumber;
+                                p.ID = ms.ID;
+                                p.Name = ms.Name;
+                            }
+                        }
+                    }
+
+                    return fs;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
     }
 }
