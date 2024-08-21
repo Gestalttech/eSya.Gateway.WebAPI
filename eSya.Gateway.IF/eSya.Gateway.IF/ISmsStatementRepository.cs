@@ -14,5 +14,6 @@ namespace eSya.Gateway.IF
         Task<bool> Insert_SmsLog(DO_SMSLog obj);
         Task<bool> Insert_SmsReminderLog(DO_SmsReminder obj);
         Task<List<DO_SmsStatement>> GetSmsonSaveClick(DO_SmsParameter sp);
+        Task<DO_SmsProviderCredential> SmsProviderCredential(int BusinessKey);
     }
 }

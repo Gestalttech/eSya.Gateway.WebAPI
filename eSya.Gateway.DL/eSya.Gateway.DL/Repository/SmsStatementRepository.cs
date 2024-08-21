@@ -68,7 +68,7 @@ namespace eSya.Gateway.DL.Repository
                     return fs;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
@@ -168,7 +168,7 @@ namespace eSya.Gateway.DL.Repository
                     //   })
                     //   .FirstOrDefaultAsync();
                 }
-               
+
                 return us;
             }
         }
@@ -192,8 +192,8 @@ namespace eSya.Gateway.DL.Repository
                         ActiveStatus = true
                     };
 
-                   await db.GtEcsmsls.AddAsync(l);
-                   await db.SaveChangesAsync();
+                    await db.GtEcsmsls.AddAsync(l);
+                    await db.SaveChangesAsync();
                 }
             }
             catch (Exception ex)
@@ -286,6 +286,34 @@ namespace eSya.Gateway.DL.Repository
                     }
 
                     return fs;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+
+        public async Task<DO_SmsProviderCredential> SmsProviderCredential(int BusinessKey)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var bk = db.GtEcsm91s.Where(x => x.BusinessKey == BusinessKey
+                    && DateTime.Now.Date >= x.EffectiveFrom.Date
+                           && DateTime.Now.Date <= (x.EffectiveTill ?? DateTime.Now).Date
+                    && x.ActiveStatus)
+                        .Select(r => new DO_SmsProviderCredential
+                        {
+                            SMSProviderAPI = r.Api,
+                            SMSProviderUserID = eSyaCryptGeneration.Decrypt(r.UserId),
+                            SMSProviderPassword = eSyaCryptGeneration.Decrypt(r.Password),
+                            SMSProviderSenderID = r.SenderId
+                        }).FirstOrDefaultAsync();
+
+                    return await bk;
                 }
             }
             catch (Exception ex)

@@ -20,6 +20,7 @@ namespace eSya.Gateway.DO
 
     public class DO_SmsParameter
     {
+        public int BusinessKey { get; set; }
         public string MessageType { get; set; }
         public string ReminderType { get; set; }
         public string NavigationURL { get; set; }
@@ -30,7 +31,6 @@ namespace eSya.Gateway.DO
         public int UserID { get; set; }
         public string LoginID { get; set; }
         public string UserName { get; set; }
-        public int BusinessKey { get; set; }
         public int UHID { get; set; }
         public int DoctorID { get; set; }
         public int CustomerID { get; set; }
@@ -81,5 +81,14 @@ namespace eSya.Gateway.DO
         public string MobileNumber { get; set; }
         public string ID { get; set; }
         public string Name { get; set; }
+    }
+
+    public class DO_SmsProviderCredential
+    {
+        public int BusinessKey { get; set; }
+        public string SMSProviderAPI { get; set; }
+        public string SMSProviderUserID { get; set; }
+        public string SMSProviderPassword { get; set; }
+        public string SMSProviderSenderID { get; set; }
     }
 }

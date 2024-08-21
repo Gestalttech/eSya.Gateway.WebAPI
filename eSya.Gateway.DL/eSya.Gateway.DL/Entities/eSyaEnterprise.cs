@@ -35,6 +35,7 @@ namespace eSya.Gateway.DL.Entities
         public virtual DbSet<GtEcpabl> GtEcpabls { get; set; } = null!;
         public virtual DbSet<GtEcprrl> GtEcprrls { get; set; } = null!;
         public virtual DbSet<GtEcsbmn> GtEcsbmns { get; set; } = null!;
+        public virtual DbSet<GtEcsm91> GtEcsm91s { get; set; } = null!;
         public virtual DbSet<GtEcsmsc> GtEcsmscs { get; set; } = null!;
         public virtual DbSet<GtEcsmsd> GtEcsmsds { get; set; } = null!;
         public virtual DbSet<GtEcsmsh> GtEcsmshes { get; set; } = null!;
@@ -664,6 +665,50 @@ namespace eSya.Gateway.DL.Entities
                     .HasForeignKey(d => d.MainMenuId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_GT_ECSBMN_GT_ECMAMN");
+            });
+
+            modelBuilder.Entity<GtEcsm91>(entity =>
+            {
+                entity.HasKey(e => new { e.BusinessKey, e.ServiceProvider, e.EffectiveFrom });
+
+                entity.ToTable("GT_ECSM91");
+
+                entity.Property(e => e.ServiceProvider)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.EffectiveFrom).HasColumnType("datetime");
+
+                entity.Property(e => e.Api)
+                    .HasMaxLength(200)
+                    .IsUnicode(false)
+                    .HasColumnName("API");
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.EffectiveTill).HasColumnType("datetime");
+
+                entity.Property(e => e.FormId)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("FormID");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.Password).HasMaxLength(2000);
+
+                entity.Property(e => e.SenderId)
+                    .HasMaxLength(20)
+                    .IsUnicode(false)
+                    .HasColumnName("SenderID");
+
+                entity.Property(e => e.UserId)
+                    .HasMaxLength(2000)
+                    .HasColumnName("UserID");
             });
 
             modelBuilder.Entity<GtEcsmsc>(entity =>

@@ -13,6 +13,7 @@ namespace eSya.Gateway.WebAPI.Services
     public interface ISmsSender
     {
         Task<SMSReponse> SendAsync(string mobileNumber, string messageText);
+        Task<SMSReponse> SendSMSAsync(string mobileNumber, string messageText, string SMSProviderUserID, string SMSProviderPassword, string SMSProviderAPI, string SMSProviderSenderID);
     }
     public class SmsSender : ISmsSender
     {
@@ -80,7 +81,50 @@ namespace eSya.Gateway.WebAPI.Services
            // return Task.FromResult(0);
         }
 
-        
+        public async Task<SMSReponse> SendSMSAsync(string mobileNumber, string messageText, string SMSProviderUserID, string SMSProviderPassword, string SMSProviderAPI, string SMSProviderSenderID)
+        {
+            _smsBaseURL = SMSProviderAPI;
+            username = SMSProviderUserID;
+            password = SMSProviderPassword;
+            sender = SMSProviderSenderID;
+
+            _smsBaseURL = String.Format(_smsBaseURL, username, password, sender, mobileNumber, messageText.Replace("&", "%26"));
+            var uri = new Uri(_smsBaseURL);
+
+            var content = new StringContent(string.Empty);
+            var Items = new SMSReponse();
+            try
+            {
+                var result = "";
+                HttpResponseMessage response = await client.PostAsync(uri, content);
+                Items.RequestMessage = _smsBaseURL;
+                if (response.IsSuccessStatusCode)
+                {
+                    Items.ResponseMessage = await response.Content.ReadAsStringAsync();
+                    if (Items.ResponseMessage.StartsWith("OK"))
+                        Items.SendStatus = true;
+                    else
+                        Items = JsonConvert.DeserializeObject<SMSReponse>(result);
+                    Items.SendStatus = true;
+                }
+                else
+                    Items.SendStatus = false;
+
+                //_smsStatementRepository.Insert_SmsLog(new NG.Gateway.DO.DO_SMSLog
+                //{
+                //    MessageType = "GC",
+                //    MobileNumber = mobileNumber,
+                //    RequestMessage = _smsBaseURL,
+                //    ResponseMessage = result,
+                //    SendStatus = Items.ResponseMessage,
+                //});
+            }
+            catch
+            {
+            }
+            return Items;
+            // return Task.FromResult(0);
+        }
     }
 
     public class SMSParameter

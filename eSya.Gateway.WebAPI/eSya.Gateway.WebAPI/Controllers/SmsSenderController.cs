@@ -4,6 +4,7 @@ using eSya.Gateway.IF;
 using eSya.Gateway.WebAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Xml.Linq;
 
 namespace eSya.Gateway.WebAPI.Controllers
 {
@@ -178,11 +179,9 @@ namespace eSya.Gateway.WebAPI.Controllers
         public async Task<IActionResult> SendSmsonSaveClick(DO_SmsParameter sp_obj)
         {
             var ds = await _CommonRepository.GetLocationSMSApplicable(sp_obj.BusinessKey);
-
-            if (ds)
+            var sms_SP = await _smsStatementRepository.SmsProviderCredential(sp_obj.BusinessKey);
+            if (ds && sms_SP.SMSProviderSenderID != null)
             {
-
-
                 var fs = await _smsStatementRepository.GetSmsonSaveClick(sp_obj);
 
                 //if (sp_obj.IsUserPasswordInclude)
@@ -202,12 +201,12 @@ namespace eSya.Gateway.WebAPI.Controllers
                             sp_obj.UserName = r.Name;
                         }
                     }
-                    messageText = TextualMessageReplaceByVariables(s.SMSStatement, sp_obj);
+                    messageText = DynamicTextReplaceByVariables(s.SMSStatement, sp_obj);
                     foreach (var p in s.l_SmsParam.Where(w => w.MobileNumber != null))
                     {
                         if (!string.IsNullOrEmpty(p.MobileNumber))
                         {
-                            var rp = await _smsSender.SendAsync(p.MobileNumber, messageText);
+                            var rp = await _smsSender.SendSMSAsync(p.MobileNumber, messageText, sms_SP.SMSProviderUserID, sms_SP.SMSProviderPassword, sms_SP.SMSProviderAPI, sms_SP.SMSProviderSenderID);
                             await _smsStatementRepository.Insert_SmsLog(new NG.Gateway.DO.DO_SMSLog
                             {
                                 MessageType = sp_obj.MessageType,
@@ -238,6 +237,28 @@ namespace eSya.Gateway.WebAPI.Controllers
                 }
             }
             return Ok();
+        }
+
+        private string DynamicTextReplaceByVariables(string smsTemplate, DO_SmsParameter sv)
+        {
+            //foreach (var sv in smsVariables)
+            //{
+            //    smsTemplate = smsTemplate.Replace(sv.Key, sv.Value);
+            //}
+            if (!string.IsNullOrEmpty(sv.OTP))
+                smsTemplate = smsTemplate.Replace("V00001", sv.LoginID);
+            if (!string.IsNullOrEmpty(sv.LoginID))
+                smsTemplate = smsTemplate.Replace("V0002", sv.UserName);
+            if (!string.IsNullOrEmpty(sv.UserName))
+                smsTemplate = smsTemplate.Replace("V0003", sv.OTP);
+            //if (!string.IsNullOrEmpty(sv.Password))
+            //    smsTemplate = smsTemplate.Replace("V0004", sv.Password);
+            //if (!string.IsNullOrEmpty(sv.Name))
+            //    smsTemplate = smsTemplate.Replace("V0006", sv.Name);
+            //if (sv.ScheduleDate != null)
+            //    smsTemplate = smsTemplate.Replace("V0007", sv.ScheduleDate.Value.ToString("dd-MMM-yyyy"));
+
+            return smsTemplate;
         }
     }
 }
