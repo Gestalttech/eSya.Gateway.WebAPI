@@ -25,10 +25,22 @@
   "W0023": "Not Exist",
   "W0024": "User Not Exist",
   "W0025": "This Password is already Used in Past",
+  "W0026": "OTP Expired",
+  "W0027": "In Valid OTP",
+  "W0028": "Your OTP has Sucessfully Validated",
+  "W0029": "Mobile Number Not Exist",
+  "W0030": "Mobile Number Validated",
+  "W0031": "Sequrity Question Validated",
+  "W0032": "You Entered Wrong Answer",
+  "W0033": "OTP Expired",
+  "W0034": "Mobile Number Not Exist Or Password Not Created",
+  "W0035": "Your Password will Expire in next",
+  "W0036": "days Kindly Reset before Expires",
+  "W0037": "No Password Expiration Rule",
 
   "S0001": "Saved Sucessfully",
   "S0002": "Updated Sucessfully",
   "S0003": "Password has been created sucessfully",
   "S0004": "Security Question has been created sucessfully",
-  "S0010": "Password has been Changed Sucessfully"
+  "S0005": "Password has been Changed Sucessfully"
 }

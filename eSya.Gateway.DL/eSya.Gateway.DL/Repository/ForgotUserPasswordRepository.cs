@@ -141,7 +141,7 @@ namespace eSya.Gateway.DL.Repository
                         {
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = false;
-                            us.Message = "OTP Expired";
+                            us.Message = string.Format(_localizer[name: "W0026"]);
                             return us;
                         }
 
@@ -149,14 +149,14 @@ namespace eSya.Gateway.DL.Repository
                         {
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = false;
-                            us.Message = "In Valid OTP";
+                            us.Message = string.Format(_localizer[name: "W0027"]); 
                             return us;
                         }
                         if (userOtp.Otpnumber == otp)
                         {
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = true;
-                            us.Message = "Your OTP has Sucessfully Validated";
+                            us.Message = string.Format(_localizer[name: "W0028"]);
                             us.LoginID = user.LoginId;
                             us.UserID = user.UserId;
                             us.LoginDesc = user.LoginDesc;
@@ -174,7 +174,7 @@ namespace eSya.Gateway.DL.Repository
                 {
                     us.SecurityQuestionId = 0;
                     us.IsSucceeded = false;
-                    us.Message = "Mobile Number Not Exist";
+                    us.Message = string.Format(_localizer[name: "W0029"]);
                 }
 
                 return us;
@@ -216,7 +216,7 @@ namespace eSya.Gateway.DL.Repository
                                 if (seqQuestion != null)
                                 {
                                     seq.IsSucceeded = true;
-                                    seq.Message = "Mobile Number Validated";
+                                    seq.Message = string.Format(_localizer[name: "W0030"]);
                                     seq.SecurityQuestionId = seqQuestion.SecurityQuestionId;
                                     seq.UserId = seqQuestion.UserId;
                                     seq.QuestionDesc = db.GtEcapcds.Where(x => x.ApplicationCode == seq.SecurityQuestionId).FirstOrDefault().CodeDesc;
@@ -225,7 +225,7 @@ namespace eSya.Gateway.DL.Repository
                                 else
                                 {
                                     seq.IsSucceeded = false;
-                                    seq.Message = "Mobile Number Not Exist";
+                                    seq.Message = string.Format(_localizer[name: "W0029"]); 
                                 }
                                
                             }
@@ -234,7 +234,7 @@ namespace eSya.Gateway.DL.Repository
                         else
                         {
                             seq.IsSucceeded = false;
-                            seq.Message = "Mobile Number Not Exist";
+                            seq.Message = string.Format(_localizer[name: "W0029"]);
 
                         }
                         return seq;
@@ -275,7 +275,7 @@ namespace eSya.Gateway.DL.Repository
                     if(user != null)
                     {
                         us.IsSucceeded = true;
-                        us.Message = "Sequrity Question Validated";
+                        us.Message = string.Format(_localizer[name: "W0031"]);
                         us.UserID=user.UserId;
                         us.LoginID= user.LoginId;
                         us.LoginDesc= user.LoginDesc;
@@ -283,7 +283,7 @@ namespace eSya.Gateway.DL.Repository
                     else
                     {
                         us.IsSucceeded = false;
-                        us.Message = "You Entered Wrong Answer";
+                        us.Message = string.Format(_localizer[name: "W0032"]);
                         us.UserID = user.UserId;
                     }
 
@@ -291,7 +291,7 @@ namespace eSya.Gateway.DL.Repository
                 else
                 {
                     us.IsSucceeded = false;
-                    us.Message = "You Entered Wrong Answer";
+                    us.Message = string.Format(_localizer[name: "W0032"]);
                     us.UserID = obj.UserId;
                 }
                        
@@ -342,7 +342,7 @@ namespace eSya.Gateway.DL.Repository
                         {
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = false;
-                            us.Message = "OTP Expired";
+                            us.Message = string.Format(_localizer[name: "W0033"]); 
                             return us;
                         }
 
@@ -350,14 +350,14 @@ namespace eSya.Gateway.DL.Repository
                         {
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = false;
-                            us.Message = "In Valid OTP";
+                            us.Message = string.Format(_localizer[name: "W0027"]);
                             return us;
                         }
                         if (userOtp.Otpnumber == otp)
                         {
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = true;
-                            us.Message = "Your OTP has Sucessfully Validated";
+                            us.Message = string.Format(_localizer[name: "W0028"]);
                             us.LoginID = user.LoginId;
                             us.UserID = user.UserId;
                             us.LoginDesc = user.LoginDesc;
@@ -376,7 +376,7 @@ namespace eSya.Gateway.DL.Repository
                 {
                     us.SecurityQuestionId = 0;
                     us.IsSucceeded = false;
-                    us.Message = "Mobile Number Not Exist Or Password Not Created";
+                    us.Message = string.Format(_localizer[name: "W0034"]);
                 }
 
                 return us;
@@ -415,7 +415,7 @@ namespace eSya.Gateway.DL.Repository
                     if (user != null)
                     {
                         us.IsSucceeded = true;
-                        us.Message = "Sequrity Question Validated";
+                        us.Message = string.Format(_localizer[name: "W0031"]);
                         us.UserID = user.UserId;
                         us.LoginID = user.LoginId;
                         us.LoginDesc = user.LoginDesc;
@@ -424,7 +424,7 @@ namespace eSya.Gateway.DL.Repository
                     else
                     {
                         us.IsSucceeded = false;
-                        us.Message = "You Entered Wrong Answer";
+                        us.Message = string.Format(_localizer[name: "W0032"]);
                         us.UserID = user.UserId;
                     }
 
@@ -432,7 +432,7 @@ namespace eSya.Gateway.DL.Repository
                 else
                 {
                     us.IsSucceeded = false;
-                    us.Message = "You Entered Wrong Answer";
+                    us.Message = string.Format(_localizer[name: "W0032"]);
                     us.UserID = obj.UserId;
                 }
 
@@ -463,18 +463,18 @@ namespace eSya.Gateway.DL.Repository
 
                         if (numberOfDays < 11)
                         {
-                            return new DO_ReturnParameter() { Status = true, StatusCode = "1", Message = "Your Password will Expire in next " + numberOfDays + " days Kindly Reset before Expires", ID = numberOfDays, Key = ds.UserId.ToString() };
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "1", Message = string.Format(_localizer[name: "W0035"]) + numberOfDays + string.Format(_localizer[name: "W0036"]) , ID = numberOfDays, Key = ds.UserId.ToString() };
                         }
                         else
                         {
-                            return new DO_ReturnParameter() { Status = true, StatusCode = "0", Message = "No Password Expiration Rule" };
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "0", Message = string.Format(_localizer[name: "W0037"]) };
 
                         }
 
                     }
                     else
                     {
-                        return new DO_ReturnParameter() { Status = true, StatusCode = "0", Message = "No Password Expiration Rule" };
+                        return new DO_ReturnParameter() { Status = true, StatusCode = "0", Message = string.Format(_localizer[name: "W0037"]) };
                     }
 
                 }
@@ -597,7 +597,7 @@ namespace eSya.Gateway.DL.Repository
                                     db.GtEuusphs.Add(passhistory);
                                     await db.SaveChangesAsync();
                                     dbContext.Commit();
-                                    return new DO_ReturnParameter() { Status = true, StatusCode = "S0010", Message = string.Format(_localizer[name: "S0010"]) };
+                                    return new DO_ReturnParameter() { Status = true, StatusCode = "S0005", Message = string.Format(_localizer[name: "S0005"]) };
 
                                 }
                             }

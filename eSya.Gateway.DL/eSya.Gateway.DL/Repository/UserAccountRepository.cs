@@ -1546,7 +1546,7 @@ namespace eSya.Gateway.DL.Repository
                     if (lg.Otpnumber == otp)
                     {
                         us.IsSucceeded = true;
-                        us.Message = "Your OTP has Sucessfully Validated";
+                        us.Message = string.Format(_localizer[name: "W0028"]);
                         us.LoginID = lg.LoginId;
                         us.UserID = lg.UserId;
                         us.LoginDesc = lg.LoginDesc;
@@ -1554,14 +1554,14 @@ namespace eSya.Gateway.DL.Repository
                     else
                     {
                         us.IsSucceeded = false;
-                        us.Message = "Invalid OTP";
+                        us.Message = string.Format(_localizer[name: "W0027"]);
                         us.UserID = lg.UserId;
                     }
                 }
                 else
                 {
                     us.IsSucceeded = false;
-                    us.Message = "Invalid OTP";
+                    us.Message = string.Format(_localizer[name: "W0027"]);
                 }
 
                 return us;
@@ -1894,13 +1894,13 @@ namespace eSya.Gateway.DL.Repository
                             db.SaveChanges();
                             dbContext.Commit();
                             us.IsSucceeded = true;
-                            us.Message = "Mobile Number Validated";
+                            us.Message = string.Format(_localizer[name: "W0030"]); 
                             us.OTP = OTP;
                         }
                         else
                         {
                             us.IsSucceeded = false;
-                            us.Message = "Mobile Number Not Exist";
+                            us.Message = string.Format(_localizer[name: "W0029"]); 
 
                         }
                         return us;
@@ -1949,7 +1949,7 @@ namespace eSya.Gateway.DL.Repository
                         {
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = false;
-                            us.Message = "OTP Expired";
+                            us.Message = string.Format(_localizer[name: "W0026"]); 
                             return us;
                         }
 
@@ -1957,14 +1957,14 @@ namespace eSya.Gateway.DL.Repository
                         {
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = false;
-                            us.Message = "In Valid OTP";
+                            us.Message = string.Format(_localizer[name: "W0027"]);
                             return us;
                         }
                         if (userOtp.Otpnumber == otp)
                         {
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = true;
-                            us.Message = "Your OTP has Sucessfully Validated";
+                            us.Message = string.Format(_localizer[name: "W0028"]);
                             us.LoginID = user.LoginId;
                             us.UserID = user.UserId;
                             us.LoginDesc = user.LoginDesc;
@@ -2016,7 +2016,7 @@ namespace eSya.Gateway.DL.Repository
                 {
                     us.SecurityQuestionId = 0;
                     us.IsSucceeded = false;
-                    us.Message = "Mobile Number Not Exist";
+                    us.Message = string.Format(_localizer[name: "W0029"]);
                 }
 
                 return us;
@@ -2085,7 +2085,7 @@ namespace eSya.Gateway.DL.Repository
                                 if (seqQuestion != null)
                                 {
                                     seq.IsSucceeded = true;
-                                    seq.Message = "Mobile Number Validated";
+                                    seq.Message = string.Format(_localizer[name: "W0030"]);
                                     seq.SecurityQuestionId = seqQuestion.SecurityQuestionId;
                                     seq.UserId = seqQuestion.UserId;
                                     seq.QuestionDesc = db.GtEcapcds.Where(x => x.ApplicationCode == seq.SecurityQuestionId).FirstOrDefault().CodeDesc;
@@ -2094,7 +2094,7 @@ namespace eSya.Gateway.DL.Repository
                                 else
                                 {
                                     seq.IsSucceeded = false;
-                                    seq.Message = "Mobile Number Not Exist";
+                                    seq.Message = string.Format(_localizer[name: "W0029"]);
                                 }
 
                             }
@@ -2103,7 +2103,7 @@ namespace eSya.Gateway.DL.Repository
                         else
                         {
                             seq.IsSucceeded = false;
-                            seq.Message = "Mobile Number Not Exist";
+                            seq.Message = string.Format(_localizer[name: "W0029"]);
 
                         }
                         return seq;
@@ -2144,7 +2144,7 @@ namespace eSya.Gateway.DL.Repository
                     if (user != null)
                     {
                         us.IsSucceeded = true;
-                        us.Message = "Sequrity Question Validated";
+                        us.Message = string.Format(_localizer[name: "W0031"]);
                         us.UserID = user.UserId;
                         us.LoginID = user.LoginId;
                         us.LoginDesc = user.LoginDesc;
@@ -2189,7 +2189,7 @@ namespace eSya.Gateway.DL.Repository
                     else
                     {
                         us.IsSucceeded = false;
-                        us.Message = "You Entered Wrong Answer";
+                        us.Message = string.Format(_localizer[name: "W0032"]);
                         us.UserID = user.UserId;
                     }
 
@@ -2197,7 +2197,7 @@ namespace eSya.Gateway.DL.Repository
                 else
                 {
                     us.IsSucceeded = false;
-                    us.Message = "You Entered Wrong Answer";
+                    us.Message = string.Format(_localizer[name: "W0032"]);
                     us.UserID = obj.UserId;
                 }
 
