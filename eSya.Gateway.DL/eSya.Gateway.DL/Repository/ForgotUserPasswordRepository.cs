@@ -86,13 +86,13 @@ namespace eSya.Gateway.DL.Repository
                             db.SaveChanges();
                             dbContext.Commit();
                             us.IsSucceeded = true;
-                            us.Message = "Mobile Number Validated";
+                            us.Message = string.Format(_localizer[name: "W0030"]); 
                             us.OTP = OTP;
                         }
                         else
                         {
                             us.IsSucceeded = false;
-                            us.Message = "Mobile Number Not Exist";
+                            us.Message = string.Format(_localizer[name: "W0029"]); 
 
                         }
                         return us;
