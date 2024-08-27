@@ -181,7 +181,7 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _CommonRepository.GetLocationSMSApplicable(sp_obj.BusinessKey);
             var sms_SP = await _smsStatementRepository.SmsProviderCredential(sp_obj.BusinessKey);
             if (ds && sms_SP.SMSProviderSenderID != null)
-            {
+            {   
                 var fs = await _smsStatementRepository.GetSmsonSaveClick(sp_obj);
 
                 //if (sp_obj.IsUserPasswordInclude)
