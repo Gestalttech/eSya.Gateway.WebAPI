@@ -176,7 +176,7 @@ namespace eSya.Gateway.WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SendSmsonSaveClick(DO_SmsParameter sp_obj)
+        public async Task<IActionResult> SendeSysSms(DO_SmsParameter sp_obj)
         {
             var ds = await _CommonRepository.GetLocationSMSApplicable(sp_obj.BusinessKey);
             var sms_SP = await _smsStatementRepository.SmsProviderCredential(sp_obj.BusinessKey);
@@ -184,11 +184,11 @@ namespace eSya.Gateway.WebAPI.Controllers
             {   
                 var fs = await _smsStatementRepository.GetSmsonSaveClick(sp_obj);
 
-                //if (sp_obj.IsUserPasswordInclude)
-                //{
-                //    sp_obj.Password = await _userAccountRepository.GetUserPassword(sp_obj.UserID);
+                if (sp_obj.IsUserPasswordInclude)
+                {
+                    sp_obj.Password = await _userAccountRepository.GetUserPassword(sp_obj.UserID);
 
-                //}
+                }
 
                 string mobileNumber = "", messageText = "";
                 foreach (var s in fs)
@@ -199,6 +199,7 @@ namespace eSya.Gateway.WebAPI.Controllers
                         {
                             sp_obj.LoginID = r.ID;
                             sp_obj.UserName = r.Name;
+                            sp_obj.MobileNumber = r.MobileNumber;
                         }
                     }
                     messageText = DynamicTextReplaceByVariables(s.SMSStatement, sp_obj);
@@ -245,11 +246,11 @@ namespace eSya.Gateway.WebAPI.Controllers
             //{
             //    smsTemplate = smsTemplate.Replace(sv.Key, sv.Value);
             //}
-            if (!string.IsNullOrEmpty(sv.OTP))
-                smsTemplate = smsTemplate.Replace("V00001", sv.LoginID);
             if (!string.IsNullOrEmpty(sv.LoginID))
-                smsTemplate = smsTemplate.Replace("V0002", sv.UserName);
+                smsTemplate = smsTemplate.Replace("V00001", sv.LoginID);
             if (!string.IsNullOrEmpty(sv.UserName))
+                smsTemplate = smsTemplate.Replace("V0002", sv.UserName);
+            if (!string.IsNullOrEmpty(sv.OTP))
                 smsTemplate = smsTemplate.Replace("V0003", sv.OTP);
             //if (!string.IsNullOrEmpty(sv.Password))
             //    smsTemplate = smsTemplate.Replace("V0004", sv.Password);

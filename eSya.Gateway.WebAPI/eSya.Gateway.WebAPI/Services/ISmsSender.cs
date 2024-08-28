@@ -109,21 +109,11 @@ namespace eSya.Gateway.WebAPI.Services
                 }
                 else
                     Items.SendStatus = false;
-
-                //_smsStatementRepository.Insert_SmsLog(new NG.Gateway.DO.DO_SMSLog
-                //{
-                //    MessageType = "GC",
-                //    MobileNumber = mobileNumber,
-                //    RequestMessage = _smsBaseURL,
-                //    ResponseMessage = result,
-                //    SendStatus = Items.ResponseMessage,
-                //});
             }
             catch
             {
             }
             return Items;
-            // return Task.FromResult(0);
         }
     }
 
