@@ -78,6 +78,18 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _forgotUserPasswordRepository.GetGatewayRuleValuebyRuleID(GwRuleId);
             return Ok(ds);
         }
+        [HttpGet]
+        public async Task<IActionResult> CheckValidateUserID(string loginID)
+        {
+            var ds = await _forgotUserPasswordRepository.CheckValidateUserID(loginID);
+            return Ok(ds);
+        }
+        [HttpGet]
+        public async Task<IActionResult> ChangePasswordfromForgotPassword(int userId, string password)
+        {
+            var ds = await _forgotUserPasswordRepository.ChangePasswordfromForgotPassword(userId, password);
+            return Ok(ds);
+        }
         #endregion
     }
 }

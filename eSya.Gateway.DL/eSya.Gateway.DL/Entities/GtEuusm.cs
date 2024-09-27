@@ -24,6 +24,7 @@ namespace eSya.Gateway.DL.Entities
         public bool IsUserDeactivated { get; set; }
         public DateTime? UserDeactivatedOn { get; set; }
         public string? DeactivationReason { get; set; }
+        public string? RejectionReason { get; set; }
         public bool ActiveStatus { get; set; }
         public string FormId { get; set; } = null!;
         public int CreatedBy { get; set; }

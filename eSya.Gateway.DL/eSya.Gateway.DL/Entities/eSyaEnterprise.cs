@@ -8,6 +8,7 @@ namespace eSya.Gateway.DL.Entities
     public partial class eSyaEnterprise : DbContext
     {
         public static string _connString = "";
+
         public eSyaEnterprise()
         {
         }
@@ -54,6 +55,7 @@ namespace eSya.Gateway.DL.Entities
         public virtual DbSet<GtEuusgr> GtEuusgrs { get; set; } = null!;
         public virtual DbSet<GtEuusm> GtEuusms { get; set; } = null!;
         public virtual DbSet<GtEuusml> GtEuusmls { get; set; } = null!;
+        public virtual DbSet<GtEuuspa> GtEuuspas { get; set; } = null!;
         public virtual DbSet<GtEuusph> GtEuusphs { get; set; } = null!;
         public virtual DbSet<GtEuuspw> GtEuuspws { get; set; } = null!;
         public virtual DbSet<GtEuusrl> GtEuusrls { get; set; } = null!;
@@ -1254,6 +1256,8 @@ namespace eSya.Gateway.DL.Entities
                     .IsUnicode(false)
                     .HasColumnName("PhotoURL");
 
+                entity.Property(e => e.RejectionReason).HasMaxLength(250);
+
                 entity.Property(e => e.UserAuthenticatedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.UserCreatedOn).HasColumnType("datetime");
@@ -1287,6 +1291,38 @@ namespace eSya.Gateway.DL.Entities
                     .HasForeignKey(d => new { d.UserId, d.BusinessKey })
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_GT_EUUSML_GT_EUUSBL");
+            });
+
+            modelBuilder.Entity<GtEuuspa>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.ParameterId });
+
+                entity.ToTable("GT_EUUSPA");
+
+                entity.Property(e => e.UserId).HasColumnName("UserID");
+
+                entity.Property(e => e.ParameterId).HasColumnName("ParameterID");
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.FormId)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("FormID");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.ParmDesc)
+                    .HasMaxLength(15)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.ParmPerc).HasColumnType("numeric(5, 2)");
+
+                entity.Property(e => e.ParmValue).HasColumnType("numeric(18, 6)");
             });
 
             modelBuilder.Entity<GtEuusph>(entity =>

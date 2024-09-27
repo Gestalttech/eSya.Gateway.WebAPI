@@ -25,6 +25,8 @@ namespace eSya.Gateway.IF
         Task<DO_ReturnParameter> GetPasswordExpirationDays(string loginId);
         Task<DO_ReturnParameter> ChangeUserExpirationPassword(DO_ChangeExpirationPassword obj);
         Task<int> GetGatewayRuleValuebyRuleID(int GwRuleId);
+        Task<DO_UserAccount> CheckValidateUserID(string loginID);
+        Task<DO_ReturnParameter> ChangePasswordfromForgotPassword(int userId, string password);
         #endregion
     }
 }

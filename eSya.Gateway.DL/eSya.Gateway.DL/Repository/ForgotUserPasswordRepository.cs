@@ -647,6 +647,120 @@ namespace eSya.Gateway.DL.Repository
 
             }
         }
+        public async Task<DO_UserAccount> CheckValidateUserID(string loginID)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+                DO_UserAccount us = new DO_UserAccount();
+
+                var lg = await db.GtEuusms
+                    .Where(w => w.LoginId == loginID)
+                    .FirstOrDefaultAsync();
+
+                if (lg != null)
+                {
+                    if (!lg.ActiveStatus)
+                    {
+                        return new DO_UserAccount() { IsSucceeded = false, StatusCode = "W0004", Message = string.Format(_localizer[name: "W0004"]) };
+                    }
+                    if(lg.BlockSignIn)
+                    {
+                        return new DO_UserAccount() { IsSucceeded = false, StatusCode = "W0005", Message = string.Format(_localizer[name: "W0005"]) };
+
+                    }
+                    if (!lg.IsUserAuthenticated)
+                    {
+                        return new DO_UserAccount() { IsSucceeded = false, StatusCode = "W0018", Message = string.Format(_localizer[name: "W0018"]) };
+                    }
+                    if (lg.IsUserDeactivated)
+                    {
+                        return new DO_UserAccount() { IsSucceeded = false, StatusCode = "W0018", Message = string.Format(_localizer[name: "User is D-Activated"]) };
+                    }
+                    return new DO_UserAccount() { IsSucceeded = true, UserID=lg.UserId };
+
+                  
+                }
+                else
+                {
+                    us.IsSucceeded = false;
+                    return new DO_UserAccount() { IsSucceeded = false, StatusCode = "W0001", Message = string.Format(_localizer[name: "W0001"]) };
+
+                }
+
+                return us;
+            }
+        }
+        public async Task<DO_ReturnParameter> ChangePasswordfromForgotPassword(int userId, string password)
+        {
+            using (eSyaEnterprise db = new eSyaEnterprise())
+            {
+                using (var dbContext = db.Database.BeginTransaction())
+                {
+                    byte[] Epass = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(password));
+
+                    var userexists = db.GtEuusms.Where(x => x.UserId == userId && x.ActiveStatus == true).FirstOrDefault();
+                    if (userexists != null)
+                    {
+                        var PasswordExist = db.GtEuuspws.Where(x => x.UserId == userId).FirstOrDefault();
+                        if (PasswordExist != null)
+                        {
+                            PasswordExist.EPasswd = Epass;
+                            PasswordExist.LastPasswdDate = DateTime.Now;
+                            PasswordExist.ModifiedBy = userId;
+                            PasswordExist.ModifiedOn = DateTime.Now;
+                            db.SaveChanges();
+
+
+                            var serialno = db.GtEuusphs.Select(x => x.SerialNumber).DefaultIfEmpty().Max() + 1;
+                            var passhistory = new GtEuusph
+                            {
+                                UserId = userId,
+                                SerialNumber = serialno,
+                                EPasswd = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(password)),
+                                LastPasswdChangedDate = DateTime.Now,
+                                ActiveStatus = true,
+                                FormId = "0",
+                                CreatedBy = userId,
+                                CreatedOn = DateTime.Now,
+                                CreatedTerminal = "GTPL"
+                            };
+                            db.GtEuusphs.Add(passhistory);
+                            db.SaveChanges();
+                            userexists.LastPasswordUpdatedDate = System.DateTime.Now;
+                            userexists.LastActivityDate = System.DateTime.Now;
+
+                            db.SaveChanges();
+
+                            var otppw = db.GtEuuotps.Where(x => x.UserId == userId && x.ActiveStatus).FirstOrDefault();
+                            if (otppw != null)
+                            {
+                                otppw.ActiveStatus = false;
+                                otppw.UsageStatus = true;
+                                otppw.ModifiedOn = DateTime.Now;
+                                otppw.ModifiedBy = userId;
+                                otppw.ModifiedTerminal = "GTPL";
+                            }
+                            db.SaveChanges();
+
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "S0005", Message = string.Format(_localizer[name: "S0005"]), ID = userId };
+
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = false, StatusCode = "W0038", Message = string.Format(_localizer[name: "W0038"]) };
+                        }
+
+
+                    }
+                    else
+                    {
+                        return new DO_ReturnParameter() { Status = false, StatusCode = "W0001", Message = string.Format(_localizer[name: "W0001"]) };
+
+                    }
+                }
+            }
+        }
         #endregion
     }
 }

@@ -26,7 +26,7 @@
   "W0024": "User Not Exist",
   "W0025": "This Password is already Used in Past",
   "W0026": "OTP Expired",
-  "W0027": "In Valid OTP",
+  "W0027": "InValid OTP",
   "W0028": "Your OTP has Sucessfully Validated",
   "W0029": "Mobile Number Not Exist",
   "W0030": "Mobile Number Validated",
@@ -37,6 +37,7 @@
   "W0035": "Your Password will Expire in next",
   "W0036": "days Kindly Reset before Expires",
   "W0037": "No Password Expiration Rule",
+  "W0038": "No Password has created yet for",
 
   "S0001": "Saved Sucessfully",
   "S0002": "Updated Sucessfully",
