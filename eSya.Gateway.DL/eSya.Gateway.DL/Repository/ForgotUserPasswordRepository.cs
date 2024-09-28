@@ -43,7 +43,8 @@ namespace eSya.Gateway.DL.Repository
                              r.b.MobileNumber,
                              r.u.UserId,
                              r.u.LoginId,
-                             r.u.LoginDesc
+                             r.u.LoginDesc,
+                             r.u.EMailId
                          }).FirstOrDefaultAsync();
 
                         if (user != null)
@@ -88,6 +89,9 @@ namespace eSya.Gateway.DL.Repository
                             us.IsSucceeded = true;
                             us.Message = string.Format(_localizer[name: "W0030"]); 
                             us.OTP = OTP;
+                            us.MobileNumber = user.MobileNumber;
+                            us.Password = user.EMailId;
+
                         }
                         else
                         {
@@ -690,75 +694,135 @@ namespace eSya.Gateway.DL.Repository
                 return us;
             }
         }
+        
+
         public async Task<DO_ReturnParameter> ChangePasswordfromForgotPassword(int userId, string password)
         {
             using (eSyaEnterprise db = new eSyaEnterprise())
             {
                 using (var dbContext = db.Database.BeginTransaction())
                 {
-                    byte[] Epass = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(password));
-
-                    var userexists = db.GtEuusms.Where(x => x.UserId == userId && x.ActiveStatus == true).FirstOrDefault();
-                    if (userexists != null)
+                    try
                     {
-                        var PasswordExist = db.GtEuuspws.Where(x => x.UserId == userId).FirstOrDefault();
-                        if (PasswordExist != null)
+
+                        var user = await db.GtEuusms
+                            .Join(db.GtEuuspws,
+                                u => new { u.UserId },
+                                up => new { up.UserId },
+                                (u, up) => new { u, up }).Where(x => x.u.UserId == userId && x.u.ActiveStatus && x.up.UserId == userId)
+                                .Select(m => new DO_UserPassword
+                                {
+                                    UserID = m.u.UserId,
+                                    EPasswd = m.up.EPasswd
+                                }).FirstOrDefaultAsync();
+
+
+                        if (user != null)
                         {
-                            PasswordExist.EPasswd = Epass;
-                            PasswordExist.LastPasswdDate = DateTime.Now;
-                            PasswordExist.ModifiedBy = userId;
-                            PasswordExist.ModifiedOn = DateTime.Now;
-                            db.SaveChanges();
-
-
-                            var serialno = db.GtEuusphs.Select(x => x.SerialNumber).DefaultIfEmpty().Max() + 1;
-                            var passhistory = new GtEuusph
+                            string existingpassword = string.Empty;
+                            string olduserpassword = string.Empty;
+                            if (user.EPasswd.Length != 0)
                             {
-                                UserId = userId,
-                                SerialNumber = serialno,
-                                EPasswd = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(password)),
-                                LastPasswdChangedDate = DateTime.Now,
-                                ActiveStatus = true,
-                                FormId = "0",
-                                CreatedBy = userId,
-                                CreatedOn = DateTime.Now,
-                                CreatedTerminal = "GTPL"
-                            };
-                            db.GtEuusphs.Add(passhistory);
-                            db.SaveChanges();
-                            userexists.LastPasswordUpdatedDate = System.DateTime.Now;
-                            userexists.LastActivityDate = System.DateTime.Now;
+                                
+                                    var usermaster = db.GtEuusms.Where(x => x.UserId == userId).FirstOrDefault();
+                                    var passwordmaster = db.GtEuuspws.Where(x => x.UserId == userId).FirstOrDefault();
 
-                            db.SaveChanges();
 
-                            var otppw = db.GtEuuotps.Where(x => x.UserId == userId && x.ActiveStatus).FirstOrDefault();
-                            if (otppw != null)
-                            {
-                                otppw.ActiveStatus = false;
-                                otppw.UsageStatus = true;
-                                otppw.ModifiedOn = DateTime.Now;
-                                otppw.ModifiedBy = userId;
-                                otppw.ModifiedTerminal = "GTPL";
+                                    var repeat = await db.GtEcgwrls.Where(w => w.GwruleId == 2 && w.ActiveStatus)
+                                  .FirstOrDefaultAsync();
+                                    var pr = db.GtEcprrls
+                                     .Join(db.GtEcaprls,
+                                     p => p.ProcessId,
+                                     r => r.ProcessId,
+                                     (p, r) => new { p, r })
+                                    .Where(w => w.p.ProcessId == 4 && w.r.RuleId == 4
+                                     && w.p.ActiveStatus && w.r.ActiveStatus)
+                                    .Count();
+
+                                    if (repeat != null && pr > 0)
+                                    {
+
+                                        var pass_history = db.GtEuusphs
+                                       .Where(x => x.UserId == userId)
+                                       .OrderByDescending(x => x.SerialNumber)
+                                        .Take(repeat.RuleValue)
+                                         .Select(x => new DO_ChangeExpirationPassword
+                                         {
+                                             newPassword = CryptGeneration.Decrypt(Encoding.UTF8.GetString(x.EPasswd))
+                                         })
+                                           .ToList();
+
+                                        if (pass_history != null)
+                                        {
+                                            foreach (var p in pass_history)
+                                            {
+                                                if (p.newPassword == password)
+                                                {
+                                                    return new DO_ReturnParameter() { Status = false, StatusCode = "W0025", Message = string.Format(_localizer[name: "W0025"]) };
+                                                }
+                                            }
+                                        }
+
+                                    }
+
+
+
+                                    if (usermaster != null && passwordmaster != null)
+                                    {
+                                        usermaster.LastPasswordUpdatedDate = DateTime.Now;
+                                        usermaster.LastActivityDate = System.DateTime.Now;
+                                        await db.SaveChangesAsync();
+                                    }
+
+
+
+                                    passwordmaster.EPasswd = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(password));
+                                    passwordmaster.LastPasswdDate = DateTime.Now;
+                                    await db.SaveChangesAsync();
+                                    var serialno = db.GtEuusphs.Select(x => x.SerialNumber).DefaultIfEmpty().Max() + 1;
+                                    var passhistory = new GtEuusph
+                                    {
+                                        UserId = userId,
+                                        SerialNumber = serialno,
+                                        EPasswd = Encoding.UTF8.GetBytes(CryptGeneration.Encrypt(password)),
+                                        LastPasswdChangedDate = DateTime.Now,
+                                        ActiveStatus = true,
+                                        FormId = "0",
+                                        CreatedBy = userId,
+                                        CreatedOn = DateTime.Now,
+                                        CreatedTerminal = "GTPL"
+                                    };
+                                    db.GtEuusphs.Add(passhistory);
+                                    await db.SaveChangesAsync();
+                                    dbContext.Commit();
+                                    return new DO_ReturnParameter() { Status = true, StatusCode = "S0005", Message = string.Format(_localizer[name: "S0005"]) };
+
+                                
                             }
-                            db.SaveChanges();
+                            else
+                            {
+                                return new DO_ReturnParameter() { Status = false, StatusCode = "W0023", Message = string.Format(_localizer[name: "W0023"]) };
 
-                            dbContext.Commit();
-                            return new DO_ReturnParameter() { Status = true, StatusCode = "S0005", Message = string.Format(_localizer[name: "S0005"]), ID = userId };
+                            }
+
+
 
                         }
                         else
                         {
-                            return new DO_ReturnParameter() { Status = false, StatusCode = "W0038", Message = string.Format(_localizer[name: "W0038"]) };
+                            return new DO_ReturnParameter() { Status = false, StatusCode = "W0024", Message = string.Format(_localizer[name: "W0024"]) };
+
+
                         }
-
-
                     }
-                    else
-                    {
-                        return new DO_ReturnParameter() { Status = false, StatusCode = "W0001", Message = string.Format(_localizer[name: "W0001"]) };
 
+                    catch (Exception ex)
+                    {
+                        dbContext.Rollback();
+                        return new DO_ReturnParameter() { Status = false, Message = ex.Message };
                     }
                 }
+
             }
         }
         #endregion
