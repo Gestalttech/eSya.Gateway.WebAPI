@@ -1658,10 +1658,22 @@ namespace eSya.Gateway.DL.Repository
             {
                 using (var db = new eSyaEnterprise())
                 {
-                    var ds = await db.GtEuusms.Where(x => x.LoginId == loginId && x.CreatePasswordInNextSignIn && x.ActiveStatus).FirstOrDefaultAsync();
+                    var ds = await db.GtEuusms.Where(x => x.LoginId == loginId && x.CreatePasswordInNextSignIn && x.ActiveStatus)
+                        .Join(db.GtEuusbls.Where(x=>x.ActiveStatus),
+                       x => new {x.UserId},
+                       y => new {y.UserId},
+                       (x, y) => new {x,y})
+                        .Select(r => new
+                        {
+                            r.x.UserId,
+                            r.x.LoginDesc,
+                            r.x.EMailId,
+                            r.y.MobileNumber
+                        })
+                        .FirstOrDefaultAsync();
                     if (ds != null)
                     {
-                        return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = ds.UserId, Key = ds.LoginDesc };
+                        return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = ds.UserId, Key = ds.LoginDesc,ErrorCode=ds.MobileNumber,Message=ds.EMailId };
                     }
                     else
                     {
