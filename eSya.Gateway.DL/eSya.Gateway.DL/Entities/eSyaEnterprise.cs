@@ -20,6 +20,7 @@ namespace eSya.Gateway.DL.Entities
 
         public virtual DbSet<GtEbecul> GtEbeculs { get; set; } = null!;
         public virtual DbSet<GtEcapcd> GtEcapcds { get; set; } = null!;
+        public virtual DbSet<GtEcaprb> GtEcaprbs { get; set; } = null!;
         public virtual DbSet<GtEcaprl> GtEcaprls { get; set; } = null!;
         public virtual DbSet<GtEcblcl> GtEcblcls { get; set; } = null!;
         public virtual DbSet<GtEcbsln> GtEcbslns { get; set; } = null!;
@@ -126,6 +127,30 @@ namespace eSya.Gateway.DL.Entities
                 entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
 
                 entity.Property(e => e.ShortCode).HasMaxLength(15);
+            });
+
+            modelBuilder.Entity<GtEcaprb>(entity =>
+            {
+                entity.HasKey(e => new { e.BusinessKey, e.RuleId, e.ProcessId });
+
+                entity.ToTable("GT_ECAPRB");
+
+                entity.Property(e => e.RuleId).HasColumnName("RuleID");
+
+                entity.Property(e => e.ProcessId).HasColumnName("ProcessID");
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.FormId)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("FormID");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
             });
 
             modelBuilder.Entity<GtEcaprl>(entity =>

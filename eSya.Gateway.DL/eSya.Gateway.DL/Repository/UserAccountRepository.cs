@@ -213,6 +213,7 @@ namespace eSya.Gateway.DL.Repository
                     lg.BlockSignIn = false;
                     us.IsSucceeded = true;
                     us.UserID = lg.UserId;
+                    
                     //SNO-6
                     //us.DoctorID = lg.DoctorId;
 

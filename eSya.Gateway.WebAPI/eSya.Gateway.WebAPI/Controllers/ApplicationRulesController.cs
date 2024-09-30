@@ -30,7 +30,12 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _applicationRulesRepository.GetApplicationRuleListByProcesssID(processID);
             return Ok(ds);
         }
-
+        [HttpGet]
+        public async Task<IActionResult> GetBusinessApplicationRuleByBusinessKey(int businesskey, int processID, int ruleID)
+        {
+            var ds = await _applicationRulesRepository.GetBusinessApplicationRuleByBusinessKey(businesskey,processID, ruleID);
+            return Ok(ds);
+        }
         #region eSya Culture
         [HttpGet]
         public async Task<IActionResult> GetActiveCultures()

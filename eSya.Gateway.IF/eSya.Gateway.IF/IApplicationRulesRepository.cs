@@ -12,6 +12,8 @@ namespace eSya.Gateway.IF
 
         Task<List<DO_ApplicationRules>> GetApplicationRuleListByProcesssID(int processID);
 
+        Task<bool> GetBusinessApplicationRuleByBusinessKey(int businesskey, int processID, int ruleID);
+
         #region eSya Culture
         Task<List<DO_eSyaLoginCulture>> GetActiveCultures();
         #endregion

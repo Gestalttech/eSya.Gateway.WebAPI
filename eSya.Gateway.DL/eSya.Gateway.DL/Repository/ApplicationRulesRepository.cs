@@ -65,6 +65,37 @@ namespace eSya.Gateway.DL.Repository
                 throw ex;
             }
         }
+
+        public async Task<bool> GetBusinessApplicationRuleByBusinessKey(int businesskey,int processID, int ruleID)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var ds =await db.GtEcprrls
+                        .Join(db.GtEcaprls,
+                            p => p.ProcessId,
+                            r => r.ProcessId,
+                            (p, r) => new { p, r })
+                        .Where(w => w.p.ProcessId == processID && w.r.RuleId == ruleID
+                            && w.p.ActiveStatus && w.p.IsSegmentSpecific && w.r.ActiveStatus)
+                       .CountAsync();
+                    if(ds > 0)
+                    {
+                        var activerules =await db.GtEcaprbs.Where(x => x.BusinessKey == businesskey && x.ProcessId == processID
+                        && x.RuleId == ruleID && x.ActiveStatus).CountAsync();
+                        return activerules > 0;
+                    }
+                    return  ds > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
+
         #region eSya Culture
         public async Task<List<DO_eSyaLoginCulture>> GetActiveCultures()
         {
