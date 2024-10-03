@@ -20,6 +20,8 @@ namespace eSya.Gateway.DL.Entities
         public int Isdcode { get; set; }
         public int CityCode { get; set; }
         public string CurrencyCode { get; set; } = null!;
+        public string DateFormat { get; set; } = null!;
+        public string ShortDateFormat { get; set; } = null!;
         public bool Lstatus { get; set; }
         public bool ActiveStatus { get; set; }
         public string FormId { get; set; } = null!;
