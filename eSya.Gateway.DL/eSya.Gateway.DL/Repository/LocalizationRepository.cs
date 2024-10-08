@@ -2,6 +2,7 @@
 using eSya.Gateway.DO;
 using eSya.Gateway.IF;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,5 +50,32 @@ namespace eSya.Gateway.DL.Repository
                
             }
         }
+        public async Task<List<FormControlProperty>> GetFormControlPropertybyUserRole(int userRole , string forminternalID)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+
+                
+                var lr = db.GtEuufcls.Where(x => x.UserRole == userRole && x.ActiveStatus)
+                 .Join(db.GtEcfmnms.Where(w =>w.FormIntId== forminternalID &&  w.ActiveStatus),
+                     l => l.FormId,
+                     c => c.FormId,
+                     (l, c) => new { l, c }).
+                     Join(db.GtEcfmcts.Where(x=>x.ActiveStatus),
+                     ll=>ll.l.ControlKey,
+                     m=>m.ControlKey,
+                     (ll, m) => new { ll,m})
+                .Select(r => new FormControlProperty
+                {
+                    ControlKey = r.ll.l.ControlKey,
+                    InternalControlId= r.m.InternalControlId,
+                    ControlType=r.m.ControlType,
+                    Property=r.m.Property,
+                    ActiveStatus=r.ll.l.ActiveStatus,
+                }).ToListAsync();
+                return await lr;
+            }
+        }
+
     }
 }

@@ -8,6 +8,7 @@ namespace eSya.Gateway.DL.Entities
     public partial class eSyaEnterprise : DbContext
     {
         public static string _connString = "";
+
         public eSyaEnterprise()
         {
         }
@@ -26,6 +27,7 @@ namespace eSya.Gateway.DL.Entities
         public virtual DbSet<GtEcclco> GtEcclcos { get; set; } = null!;
         public virtual DbSet<GtEccncd> GtEccncds { get; set; } = null!;
         public virtual DbSet<GtEcfmal> GtEcfmals { get; set; } = null!;
+        public virtual DbSet<GtEcfmct> GtEcfmcts { get; set; } = null!;
         public virtual DbSet<GtEcfmfd> GtEcfmfds { get; set; } = null!;
         public virtual DbSet<GtEcfmnm> GtEcfmnms { get; set; } = null!;
         public virtual DbSet<GtEcgwrl> GtEcgwrls { get; set; } = null!;
@@ -47,6 +49,7 @@ namespace eSya.Gateway.DL.Entities
         public virtual DbSet<GtEsdocd> GtEsdocds { get; set; } = null!;
         public virtual DbSet<GtEupapp> GtEupapps { get; set; } = null!;
         public virtual DbSet<GtEuubgr> GtEuubgrs { get; set; } = null!;
+        public virtual DbSet<GtEuufcl> GtEuufcls { get; set; } = null!;
         public virtual DbSet<GtEuuotp> GtEuuotps { get; set; } = null!;
         public virtual DbSet<GtEuusac> GtEuusacs { get; set; } = null!;
         public virtual DbSet<GtEuusbl> GtEuusbls { get; set; } = null!;
@@ -363,6 +366,41 @@ namespace eSya.Gateway.DL.Entities
                     .HasForeignKey(d => d.FormId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_GT_ECFMAL_GT_ECFMFD");
+            });
+
+            modelBuilder.Entity<GtEcfmct>(entity =>
+            {
+                entity.HasKey(e => e.ControlKey);
+
+                entity.ToTable("GT_ECFMCT");
+
+                entity.Property(e => e.ControlKey).ValueGeneratedNever();
+
+                entity.Property(e => e.ControlType)
+                    .HasMaxLength(15)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.FormId)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasColumnName("FormID");
+
+                entity.Property(e => e.InternalControlId)
+                    .HasMaxLength(100)
+                    .IsUnicode(false)
+                    .HasColumnName("InternalControlID");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
+
+                entity.Property(e => e.Property)
+                    .HasMaxLength(25)
+                    .IsUnicode(false);
             });
 
             modelBuilder.Entity<GtEcfmfd>(entity =>
@@ -1025,6 +1063,23 @@ namespace eSya.Gateway.DL.Entities
                     .HasMaxLength(10)
                     .IsUnicode(false)
                     .HasColumnName("FormID");
+
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.ModifiedTerminal).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<GtEuufcl>(entity =>
+            {
+                entity.HasKey(e => new { e.UserRole, e.FormId, e.ControlKey });
+
+                entity.ToTable("GT_EUUFCL");
+
+                entity.Property(e => e.FormId).HasColumnName("FormID");
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTerminal).HasMaxLength(50);
 
                 entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
 

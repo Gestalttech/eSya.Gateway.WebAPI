@@ -9213,11 +9213,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI.csproj",
+      "projectUniqueName": "D:\\Projects\\eSyaProjects2022\\LabelHide&show\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI.csproj",
       "projectName": "eSya.Gateway.WebAPI",
-      "projectPath": "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI.csproj",
+      "projectPath": "D:\\Projects\\eSyaProjects2022\\LabelHide&show\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI.csproj",
       "packagesPath": "C:\\Users\\lenovo\\.nuget\\packages\\",
-      "outputPath": "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\obj\\",
+      "outputPath": "D:\\Projects\\eSyaProjects2022\\LabelHide&show\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\eSya.Gateway.WebAPI\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
@@ -9240,14 +9240,14 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
-            "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.DL\\eSya.Gateway.DL\\eSya.Gateway.DL.csproj": {
-              "projectPath": "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.DL\\eSya.Gateway.DL\\eSya.Gateway.DL.csproj"
+            "D:\\Projects\\eSyaProjects2022\\LabelHide&show\\eSya.Gateway.WebAPI\\eSya.Gateway.DL\\eSya.Gateway.DL\\eSya.Gateway.DL.csproj": {
+              "projectPath": "D:\\Projects\\eSyaProjects2022\\LabelHide&show\\eSya.Gateway.WebAPI\\eSya.Gateway.DL\\eSya.Gateway.DL\\eSya.Gateway.DL.csproj"
             },
-            "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\eSya.Gateway.DO.csproj": {
-              "projectPath": "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\eSya.Gateway.DO.csproj"
+            "D:\\Projects\\eSyaProjects2022\\LabelHide&show\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\eSya.Gateway.DO.csproj": {
+              "projectPath": "D:\\Projects\\eSyaProjects2022\\LabelHide&show\\eSya.Gateway.WebAPI\\eSya.Gateway.DO\\eSya.Gateway.DO\\eSya.Gateway.DO.csproj"
             },
-            "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.IF\\eSya.Gateway.IF\\eSya.Gateway.IF.csproj": {
-              "projectPath": "D:\\Projects\\eSyaProjects2022\\eSya.Gateway.WebAPI\\eSya.Gateway.IF\\eSya.Gateway.IF\\eSya.Gateway.IF.csproj"
+            "D:\\Projects\\eSyaProjects2022\\LabelHide&show\\eSya.Gateway.WebAPI\\eSya.Gateway.IF\\eSya.Gateway.IF\\eSya.Gateway.IF.csproj": {
+              "projectPath": "D:\\Projects\\eSyaProjects2022\\LabelHide&show\\eSya.Gateway.WebAPI\\eSya.Gateway.IF\\eSya.Gateway.IF\\eSya.Gateway.IF.csproj"
             }
           }
         }

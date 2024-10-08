@@ -22,5 +22,12 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _localizationRepository.GetLocalizationResourceString(culture, resourceName);
             return Ok(ds);
         }
+        [HttpGet]
+        public async Task<IActionResult> GetFormControlPropertybyUserRole(int userRole, string forminternalID)
+        {
+
+            var ds = await _localizationRepository.GetFormControlPropertybyUserRole(userRole, forminternalID);
+            return Ok(ds);
+        }
     }
 }

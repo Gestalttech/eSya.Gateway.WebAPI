@@ -9,5 +9,6 @@ namespace eSya.Gateway.IF
     public interface ILocalizationRepository
     {
         Task<List<DO_LocalizationResource>> GetLocalizationResourceString(string culture, string resourceName);
+        Task<List<FormControlProperty>> GetFormControlPropertybyUserRole(int userRole, string forminternalID);
     }
 }

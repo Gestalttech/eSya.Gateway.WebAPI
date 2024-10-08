@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("eSya.Gateway.DO")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cfd2186d0ecfc70209eda9e38b43a5996b6526a8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bae8c522543023a3af42badd68d2d3c75ddf0f45")]
 [assembly: System.Reflection.AssemblyProductAttribute("eSya.Gateway.DO")]
 [assembly: System.Reflection.AssemblyTitleAttribute("eSya.Gateway.DO")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
