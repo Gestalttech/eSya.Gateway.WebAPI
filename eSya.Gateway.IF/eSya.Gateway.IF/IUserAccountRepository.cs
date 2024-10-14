@@ -25,6 +25,8 @@ namespace eSya.Gateway.IF
 
         Task<DO_UserAccount> GetUserBusinessLocation(int userID);
 
+        Task<int> GetUserRolebyUserID(int userID, int businbessKey);
+
         #region Check User is Authenticated
         Task<DO_ReturnParameter> ChkIsUserAuthenticated(string loginId);
         #endregion

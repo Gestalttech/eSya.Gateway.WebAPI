@@ -1307,7 +1307,30 @@ namespace eSya.Gateway.DL.Repository
             }
         }
 
+        public async Task<int> GetUserRolebyUserID(int userID,int businbessKey)
+        {
+            using (var db = new eSyaEnterprise())
+            {
+              
+                var lg = await db.GtEuubgrs
+                    .Where(w =>
+                                w.UserId == userID && w.BusinessKey==businbessKey &&
+                                w.ActiveStatus == true)
+                    .FirstOrDefaultAsync();
 
+                if (lg != null)
+                { 
+                 
+                    return lg.UserRole;
+                }
+                else
+                {
+                    return 0;
+                }
+
+              
+            }
+        }
         public static string Decrypt(string cipherText)
         {
             string EncryptionKey = "eSya@12345Tabibi247";
@@ -1440,6 +1463,8 @@ namespace eSya.Gateway.DL.Repository
                 return l_menuForm;
             }
         }
+
+
 
         #region Check User is Authenticated
         public async Task<DO_ReturnParameter> ChkIsUserAuthenticated(string loginId)

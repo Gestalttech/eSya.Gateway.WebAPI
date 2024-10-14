@@ -110,6 +110,14 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _userAccountRepository.GetUserBusinessLocation(userID);
             return Ok(ds);
         }
+        [HttpGet]
+        public async Task<IActionResult> GetUserRolebyUserID(int userID, int businbessKey)
+        {
+            var ds = await _userAccountRepository.GetUserRolebyUserID(userID, businbessKey);
+            return Ok(ds);
+        }
+        
+
         #region Getting the User Location List
         [HttpGet]
         public async Task<IActionResult> GetUserLocationsbyUserID(string loginID)
