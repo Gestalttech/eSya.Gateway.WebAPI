@@ -44,7 +44,8 @@ namespace eSya.Gateway.DL.Repository
                              r.u.UserId,
                              r.u.LoginId,
                              r.u.LoginDesc,
-                             r.u.EMailId
+                             r.u.EMailId,
+                             r.b.BusinessKey
                          }).FirstOrDefaultAsync();
 
                         if (user != null)
@@ -87,11 +88,12 @@ namespace eSya.Gateway.DL.Repository
                             db.SaveChanges();
                             dbContext.Commit();
                             us.IsSucceeded = true;
-                            us.Message = string.Format(_localizer[name: "W0030"]); 
+                            us.Message = string.Format(_localizer[name: "W0030"]);
+                            us.UserID = user.UserId;
                             us.OTP = OTP;
                             us.MobileNumber = user.MobileNumber;
                             us.Password = user.EMailId;
-
+                            us.SelectedBusinessKey = user.BusinessKey;
                         }
                         else
                         {
@@ -127,6 +129,8 @@ namespace eSya.Gateway.DL.Repository
                              r.u.UserId,
                              r.u.LoginId,
                              r.u.LoginDesc,
+                             r.b.BusinessKey,
+                             r.u.EMailId
 
                          }).FirstOrDefaultAsync();
 
@@ -158,16 +162,19 @@ namespace eSya.Gateway.DL.Repository
                         }
                         if (userOtp.Otpnumber == otp)
                         {
+                           
+                            userOtp.UsageStatus = true;
+                            userOtp.ActiveStatus = false;
+                            userOtp.ModifiedOn = System.DateTime.Now;
+                            db.SaveChanges();
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = true;
                             us.Message = string.Format(_localizer[name: "W0028"]);
                             us.LoginID = user.LoginId;
                             us.UserID = user.UserId;
                             us.LoginDesc = user.LoginDesc;
-                            userOtp.UsageStatus = true;
-                            userOtp.ActiveStatus = false;
-                            userOtp.ModifiedOn = System.DateTime.Now;
-                            db.SaveChanges();
+                            us.SelectedBusinessKey = user.BusinessKey;
+                            us.Password = user.EMailId;
 
                         }
 

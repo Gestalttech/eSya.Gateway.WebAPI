@@ -42,6 +42,7 @@ namespace eSya.Gateway.IF
         #region Create Password
         Task<DO_ReturnParameter> CreateUserPasswordINNextSignIn(int userId, string password);
         Task<DO_ReturnParameter> ChkIsCreatePasswordInNextSignIn(string loginId);
+        Task<DO_ReturnParameter> OTPCreatePasswordInNextSignIn(string loginId);
         #endregion
 
         #region User Security Question

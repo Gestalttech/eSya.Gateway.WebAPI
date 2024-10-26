@@ -77,8 +77,8 @@ namespace eSya.Gateway.DL.Repository
                         return us;
                     }
 
-                   // var ds = await db.GtEuusms.Where(x => x.LoginId.ToUpper().Replace(" ", "") == loginID.ToUpper().Replace(" ", "") && x.IsUserAuthenticated && x.ActiveStatus
-                   //&& (!x.BlockSignIn) && (!x.CreatePasswordInNextSignIn)).FirstOrDefaultAsync();
+                    // var ds = await db.GtEuusms.Where(x => x.LoginId.ToUpper().Replace(" ", "") == loginID.ToUpper().Replace(" ", "") && x.IsUserAuthenticated && x.ActiveStatus
+                    //&& (!x.BlockSignIn) && (!x.CreatePasswordInNextSignIn)).FirstOrDefaultAsync();
                     var exp = await db.GtEcgwrls.Where(w => w.GwruleId == 1 && w.ActiveStatus)
                                   .FirstOrDefaultAsync();
                     var pr = db.GtEcprrls
@@ -86,11 +86,11 @@ namespace eSya.Gateway.DL.Repository
                            p => p.ProcessId,
                            r => r.ProcessId,
                     (p, r) => new { p, r })
-                    .Where(w => w.p.ProcessId == 4 && w.r.RuleId ==3
+                    .Where(w => w.p.ProcessId == 4 && w.r.RuleId == 3
                            && w.p.ActiveStatus && w.r.ActiveStatus)
                       .Count();
 
-                    if (lg != null && lg.LastPasswordUpdatedDate != null && exp != null && pr>0)
+                    if (lg != null && lg.LastPasswordUpdatedDate != null && exp != null && pr > 0)
                     {
                         DateTime lastPasswordUpdatedDate = lg.LastPasswordUpdatedDate.Value;
                         DateTime currentDate = DateTime.Now.AddDays(1);
@@ -125,7 +125,7 @@ namespace eSya.Gateway.DL.Repository
                         .Where(w => w.p.ProcessId == 4 && w.r.RuleId == 2
                                && w.p.ActiveStatus && w.r.ActiveStatus)
                           .Count();
-                       
+
                         if (existingpass != enterpass)
                         {
                             if (lg != null && logiattempt != null && loginprocessRule > 0)
@@ -196,7 +196,7 @@ namespace eSya.Gateway.DL.Repository
                                 return us;
                             }
                         }
-                       
+
 
                     }
                     else
@@ -213,7 +213,7 @@ namespace eSya.Gateway.DL.Repository
                     lg.BlockSignIn = false;
                     us.IsSucceeded = true;
                     us.UserID = lg.UserId;
-                    
+
                     //SNO-6
                     //us.DoctorID = lg.DoctorId;
 
@@ -231,9 +231,9 @@ namespace eSya.Gateway.DL.Repository
                        .ToDictionary(x => x.Key, x => x.Value);
 
                     if (ub.Count() > 0)
-                       
+
                         if (ub.Where(w => w.u.AllowMtfy).Count() > 0)
-                        {  
+                        {
 
 
 
@@ -264,7 +264,7 @@ namespace eSya.Gateway.DL.Repository
                                 .ToList();
 
                         }
-                
+
                     await db.SaveChangesAsync();
                 }
                 else
@@ -275,7 +275,7 @@ namespace eSya.Gateway.DL.Repository
 
 
                 }
-               return us;
+                return us;
             }
         }
 
@@ -1307,20 +1307,20 @@ namespace eSya.Gateway.DL.Repository
             }
         }
 
-        public async Task<int> GetUserRolebyUserID(int userID,int businbessKey)
+        public async Task<int> GetUserRolebyUserID(int userID, int businbessKey)
         {
             using (var db = new eSyaEnterprise())
             {
-              
+
                 var lg = await db.GtEuubgrs
                     .Where(w =>
-                                w.UserId == userID && w.BusinessKey==businbessKey &&
+                                w.UserId == userID && w.BusinessKey == businbessKey &&
                                 w.ActiveStatus == true)
                     .FirstOrDefaultAsync();
 
                 if (lg != null)
-                { 
-                 
+                {
+
                     return lg.UserRole;
                 }
                 else
@@ -1328,7 +1328,7 @@ namespace eSya.Gateway.DL.Repository
                     return 0;
                 }
 
-              
+
             }
         }
         public static string Decrypt(string cipherText)
@@ -1493,7 +1493,7 @@ namespace eSya.Gateway.DL.Repository
         #endregion
 
         #region Getting the User Location List
-        public async Task <DO_UserFinBusinessLocation> GetUserLocationsbyUserID(string loginID)
+        public async Task<DO_UserFinBusinessLocation> GetUserLocationsbyUserID(string loginID)
         {
             using (var db = new eSyaEnterprise())
             {
@@ -1514,8 +1514,8 @@ namespace eSya.Gateway.DL.Repository
 
                     us.lstUserLocation = ub.Select(x => new DO_UserFinBusinessLocation()
                     {
-                        BusinessKey=x.u.BusinessKey,
-                        BusinessLocation=x.b.BusinessName+"-"+x.b.LocationDescription
+                        BusinessKey = x.u.BusinessKey,
+                        BusinessLocation = x.b.BusinessName + "-" + x.b.LocationDescription
                     }).GroupBy(x => new { x.BusinessKey }).Select(g => g.First()).ToList();
 
                     if (ub.Count() > 0)
@@ -1536,9 +1536,9 @@ namespace eSya.Gateway.DL.Repository
                         }
                         else
                         {
-                            us.lstFinancialYear = new List<int> {System.DateTime.Now.Year };
+                            us.lstFinancialYear = new List<int> { System.DateTime.Now.Year };
                         }
-                       
+
                     return us;
                 }
                 return us;
@@ -1685,10 +1685,10 @@ namespace eSya.Gateway.DL.Repository
                 using (var db = new eSyaEnterprise())
                 {
                     var ds = await db.GtEuusms.Where(x => x.LoginId == loginId && x.CreatePasswordInNextSignIn && x.ActiveStatus)
-                        .Join(db.GtEuusbls.Where(x=>x.ActiveStatus),
-                       x => new {x.UserId},
-                       y => new {y.UserId},
-                       (x, y) => new {x,y})
+                        .Join(db.GtEuusbls.Where(x => x.ActiveStatus),
+                       x => new { x.UserId },
+                       y => new { y.UserId },
+                       (x, y) => new { x, y })
                         .Select(r => new
                         {
                             r.x.UserId,
@@ -1699,7 +1699,7 @@ namespace eSya.Gateway.DL.Repository
                         .FirstOrDefaultAsync();
                     if (ds != null)
                     {
-                        return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = ds.UserId, Key = ds.LoginDesc,ErrorCode=ds.MobileNumber,Message=ds.EMailId };
+                        return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = ds.UserId, Key = ds.LoginDesc, ErrorCode = ds.MobileNumber, Message = ds.EMailId };
                     }
                     else
                     {
@@ -1713,6 +1713,82 @@ namespace eSya.Gateway.DL.Repository
                 throw ex;
             }
         }
+        public async Task<DO_ReturnParameter> OTPCreatePasswordInNextSignIn(string loginId)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    using (var dbContext = db.Database.BeginTransaction())
+                    {
+                        var ds = await db.GtEuusms.Where(x => x.LoginId == loginId && x.CreatePasswordInNextSignIn && x.ActiveStatus)
+                        .Join(db.GtEuusbls.Where(x => x.ActiveStatus),
+                       x => new { x.UserId },
+                       y => new { y.UserId },
+                       (x, y) => new { x, y })
+                        .Select(r => new
+                        {
+                            r.x.UserId,
+                            r.x.LoginDesc,
+                            r.x.EMailId,
+                            r.y.MobileNumber,
+                            r.y.BusinessKey
+                        })
+                        .FirstOrDefaultAsync();
+
+                        if (ds != null)
+                        {
+                            var userOtp = db.GtEuuotps.Where(x => x.UserId == ds.UserId).FirstOrDefault();
+                            Random rnd = new Random();
+                            var OTP = rnd.Next(100000, 999999).ToString();
+                            if (userOtp == null)
+                            {
+                                var lotp = new GtEuuotp()
+                                {
+                                    UserId = ds.UserId,
+                                    Otpnumber = OTP,
+                                    Otpsource = "SMS OTP",
+                                    OtpgeneratedDate = System.DateTime.Now,
+                                    UsageStatus = false,
+                                    ActiveStatus = true,
+                                    FormId = "0",
+                                    CreatedBy = ds.UserId,
+                                    CreatedOn = System.DateTime.Now,
+                                    CreatedTerminal = "GTPL"
+                                };
+                                db.GtEuuotps.Add(lotp);
+                                db.SaveChanges();
+
+                            }
+                            else
+                            {
+                                userOtp.Otpnumber = OTP;
+                                userOtp.Otpsource = "SMS OTP";
+                                userOtp.UsageStatus = false;
+                                userOtp.ActiveStatus = true;
+                                userOtp.OtpgeneratedDate = System.DateTime.Now;
+                                userOtp.ModifiedBy = ds.UserId;
+                                userOtp.ModifiedOn = System.DateTime.Now;
+                                userOtp.ModifiedTerminal = "GTPL";
+                                db.SaveChanges();
+                            }
+                            dbContext.Commit();
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "1", ID = ds.UserId, Key = OTP, ErrorCode = ds.MobileNumber, Message = ds.EMailId, BusinessKey = ds.BusinessKey };
+                        }
+                        else
+                        {
+                            return new DO_ReturnParameter() { Status = true, StatusCode = "0" };
+                        }
+                    }
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        } 
 
         #endregion
 

@@ -159,6 +159,12 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _userAccountRepository.ChkIsCreatePasswordInNextSignIn(loginId);
             return Ok(ds);
         }
+        [HttpGet]
+        public async Task<IActionResult> OTPCreatePasswordInNextSignIn(string loginId)
+        {
+            var ds = await _userAccountRepository.OTPCreatePasswordInNextSignIn(loginId);
+            return Ok(ds);
+        }
         #endregion
 
         #region User Security Question
