@@ -36,7 +36,27 @@ namespace eSya.Gateway.DL.Repository
             }
 
         }
+        public async Task<bool> GetMobileLoginApplicationRuleStatusByID(int processID)
+        {
+            try
+            {
+                using (var db = new eSyaEnterprise())
+                {
+                    var ds = db.GtEcprrls
+                        .Where(w => w.ProcessId == processID
+                            && w.ActiveStatus)
+                       .CountAsync();
 
+                    return await ds > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
+        //need to delete
         public async Task<List<DO_ApplicationRules>> GetApplicationRuleListByProcesssID(int processID)
         {
             try

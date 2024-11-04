@@ -1931,13 +1931,15 @@ namespace eSya.Gateway.DL.Repository
                          .Select(r => new
                          {
                              r.b.MobileNumber,
-                             r.u.UserId,
+                             r.b.UserId,
                              r.u.LoginId,
                              r.u.LoginDesc,
                              r.u.ActiveStatus,
                              r.u.IsUserAuthenticated,
                              r.u.BlockSignIn,
-                             r.u.CreatePasswordInNextSignIn
+                             r.u.CreatePasswordInNextSignIn,
+                             r.b.BusinessKey,
+                             r.u.EMailId
                          }).FirstOrDefaultAsync();
 
                         if (user != null)
@@ -1956,13 +1958,7 @@ namespace eSya.Gateway.DL.Repository
                                 us.StatusCode = "W0005";
                                 return us;
                             }
-                            if (user.CreatePasswordInNextSignIn)
-                            {
-                                us.IsSucceeded = false;
-                                us.Message = string.Format(_localizer[name: "W0016"]);
-                                us.StatusCode = "W0016";
-                                return us;
-                            }
+                            
                             if (!user.IsUserAuthenticated)
                             {
                                 us.IsSucceeded = false;
@@ -1970,7 +1966,30 @@ namespace eSya.Gateway.DL.Repository
                                 us.StatusCode = "W0018";
                                 return us;
                             }
+                            var allowmlogin = db.GtEuuspas.Any(x =>x.UserId== user.UserId && x.ParameterId == 3 && x.ParmAction);
+                            if (!allowmlogin)
+                            {
+                                us.IsSucceeded = false;
+                                us.Message = string.Format(_localizer[name: "W0040"]);
+                                us.StatusCode = "W0040";
+                                return us;
+                            }
+                            if (user.CreatePasswordInNextSignIn)
+                            {
+                                /// need to create password
+                                us.IsSucceeded = false;
+                                us.Message = string.Format(_localizer[name: "W0039"]); ;
+                                us.StatusCode = "W0039";
+                                us.OTP = "First time login";
+                                us.UserID = user.UserId;
+                                us.SelectedBusinessKey = user.BusinessKey;
+                                us.MobileNumber = user.MobileNumber;
+                                us.Password = user.EMailId;
+                                us.LoginDesc = user.LoginDesc;
+                                us.LoginID = user.LoginId;
 
+                                return us;
+                            }
                             var userOtp = db.GtEuuotps.Where(x => x.UserId == user.UserId).FirstOrDefault();
                             Random rnd = new Random();
                             var OTP = rnd.Next(100000, 999999).ToString();
@@ -2005,11 +2024,18 @@ namespace eSya.Gateway.DL.Repository
                                 userOtp.ModifiedOn = System.DateTime.Now;
                                 userOtp.ModifiedTerminal = "GTPL";
                             }
+                           
                             db.SaveChanges();
                             dbContext.Commit();
                             us.IsSucceeded = true;
                             us.Message = string.Format(_localizer[name: "W0030"]); 
                             us.OTP = OTP;
+                            us.UserID = user.UserId;
+                            us.SelectedBusinessKey = user.BusinessKey;
+                            us.MobileNumber = user.MobileNumber;
+                            us.Password = user.EMailId;
+                            us.LoginDesc = user.LoginDesc;
+                            us.LoginID = user.LoginId;
                         }
                         else
                         {
@@ -2045,7 +2071,8 @@ namespace eSya.Gateway.DL.Repository
                              r.u.UserId,
                              r.u.LoginId,
                              r.u.LoginDesc,
-
+                             r.u.CreatePasswordInNextSignIn,
+                             r.b.BusinessKey
                          }).FirstOrDefaultAsync();
 
                 if (user != null)
@@ -2074,8 +2101,24 @@ namespace eSya.Gateway.DL.Repository
                             us.Message = string.Format(_localizer[name: "W0027"]);
                             return us;
                         }
+                        
                         if (userOtp.Otpnumber == otp)
                         {
+                            if (user.CreatePasswordInNextSignIn)
+                            {
+                                /// need to create password
+                                us.IsSucceeded = false;
+                                us.Message = string.Format(_localizer[name: "W0039"]); ;
+                                us.StatusCode = "W0039";
+                                us.OTP = "First time login";
+                                us.UserID = user.UserId;
+                                us.SelectedBusinessKey = user.BusinessKey;
+                                us.MobileNumber = user.MobileNumber;
+                                us.LoginDesc = user.LoginDesc;
+                                us.LoginID = user.LoginId;
+
+                                return us;
+                            }
                             us.SecurityQuestionId = 0;
                             us.IsSucceeded = true;
                             us.Message = string.Format(_localizer[name: "W0028"]);
@@ -2085,41 +2128,43 @@ namespace eSya.Gateway.DL.Repository
                             userOtp.UsageStatus = true;
                             userOtp.ActiveStatus = false;
                             userOtp.ModifiedOn = System.DateTime.Now;
+                            db.SaveChanges();
+                            return us;
                             // redirect tologin
-                            var lg = await db.GtEuusms
-                              .Where(w => w.UserId == user.UserId)
-                              .FirstOrDefaultAsync();
+                            //var lg = await db.GtEuusms
+                            //  .Where(w => w.UserId == user.UserId)
+                            //  .FirstOrDefaultAsync();
 
-                            if (lg != null)
-                            {
-                                lg.UnsuccessfulAttempt = 0;
-                                lg.LastActivityDate = DateTime.Now;
-                                lg.LoginAttemptDate = DateTime.Now;
-                                lg.BlockSignIn = false;
-                                us.IsSucceeded = true;
-                                us.UserID = lg.UserId;
-                                var ub = db.GtEuusbls
-                               .Join(db.GtEcbslns,
-                                  u => u.BusinessKey,
-                                  b => b.BusinessKey,
-                                  (u, b) => new { u, b })
-                               .Where(w => w.u.UserId == lg.UserId);
+                            //if (lg != null)
+                            //{
+                            //    lg.UnsuccessfulAttempt = 0;
+                            //    lg.LastActivityDate = DateTime.Now;
+                            //    lg.LoginAttemptDate = DateTime.Now;
+                            //    lg.BlockSignIn = false;
+                            //    us.IsSucceeded = true;
+                            //    us.UserID = lg.UserId;
+                            //    var ub = db.GtEuusbls
+                            //   .Join(db.GtEcbslns,
+                            //      u => u.BusinessKey,
+                            //      b => b.BusinessKey,
+                            //      (u, b) => new { u, b })
+                            //   .Where(w => w.u.UserId == lg.UserId);
 
-                                us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.BusinessName + "-" + x.b.LocationDescription))
-                                               .ToDictionary(x => x.Key, x => x.Value);
+                            //    us.l_BusinessKey = ub.Select(x => new KeyValuePair<int, string>(x.u.BusinessKey, x.b.BusinessName + "-" + x.b.LocationDescription))
+                            //                   .ToDictionary(x => x.Key, x => x.Value);
 
-                                us.l_FinancialYear = db.GtEcblcls
-                               .Where(x => x.ActiveStatus) // Filter active records
-                               .Select(x => x.CalenderKey) // Select the CalenderKey
-                               .Where(calenderKey => calenderKey.Length > 2) // Ensure the string has more than 2 characters
-                               .Select(calenderKey => calenderKey.Substring(2)) // Remove the first two characters
-                               .Select(calenderKey => calenderKey.Length > 4 ? calenderKey.Substring(0, 4) : calenderKey) // Truncate after four characters if length > 4
-                               .Distinct()
-                               .OrderByDescending(calenderKey => calenderKey)
-                               .Select(calenderKey => int.Parse(calenderKey)) // Convert to integer
-                               .ToList();
-                                db.SaveChanges();
-                            }   
+                            //    us.l_FinancialYear = db.GtEcblcls
+                            //   .Where(x => x.ActiveStatus) // Filter active records
+                            //   .Select(x => x.CalenderKey) // Select the CalenderKey
+                            //   .Where(calenderKey => calenderKey.Length > 2) // Ensure the string has more than 2 characters
+                            //   .Select(calenderKey => calenderKey.Substring(2)) // Remove the first two characters
+                            //   .Select(calenderKey => calenderKey.Length > 4 ? calenderKey.Substring(0, 4) : calenderKey) // Truncate after four characters if length > 4
+                            //   .Distinct()
+                            //   .OrderByDescending(calenderKey => calenderKey)
+                            //   .Select(calenderKey => int.Parse(calenderKey)) // Convert to integer
+                            //   .ToList();
+                            //    db.SaveChanges();
+                            //}   
 
                         }
 

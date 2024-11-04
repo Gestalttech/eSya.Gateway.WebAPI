@@ -23,7 +23,13 @@ namespace eSya.Gateway.WebAPI.Controllers
             var ds = await _applicationRulesRepository.GetApplicationRuleStatusByID(processID, ruleID);
             return Ok(ds);
         }
-
+        [HttpGet]
+        public async Task<IActionResult> GetMobileLoginApplicationRuleStatusByID(int processID)
+        {
+            var ds = await _applicationRulesRepository.GetMobileLoginApplicationRuleStatusByID(processID);
+            return Ok(ds);
+        }
+       //need to delete
         [HttpGet]
         public async Task<IActionResult> GetApplicationRuleListByProcesssID(int processID)
         {

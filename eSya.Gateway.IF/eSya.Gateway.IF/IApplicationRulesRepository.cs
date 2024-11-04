@@ -9,7 +9,8 @@ namespace eSya.Gateway.IF
     public interface IApplicationRulesRepository
     {
         Task<bool> GetApplicationRuleStatusByID(int processID, int ruleID);
-
+        Task<bool> GetMobileLoginApplicationRuleStatusByID(int processID);
+        //need to delete
         Task<List<DO_ApplicationRules>> GetApplicationRuleListByProcesssID(int processID);
 
         Task<bool> GetBusinessApplicationRuleByBusinessKey(int businesskey, int processID, int ruleID);

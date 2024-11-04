@@ -38,6 +38,8 @@
   "W0036": "days Kindly Reset before Expires",
   "W0037": "No Password Expiration Rule",
   "W0038": "No Password has created yet for",
+  "W0039": "Mobile Number verified but for first time login please create password",
+  "W0040": "User not allowed to Mobile Login ",
 
   "S0001": "Saved Sucessfully",
   "S0002": "Updated Sucessfully",
